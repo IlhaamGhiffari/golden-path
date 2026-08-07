@@ -18,7 +18,8 @@ Every commit travels the golden path: CI builds it, scanners vet it, containers 
 ![Grafana](https://img.shields.io/badge/Grafana-F46800?logo=grafana&logoColor=white&style=for-the-badge)
 ![Trivy](https://img.shields.io/badge/Trivy-1904DA?logo=trivy&logoColor=white&style=for-the-badge)
 
-**Status:** Phase 1 — site scaffolding & CI in progress · **Live demo:** coming with the first AKS deploy
+**Status:** 🟡 Planning complete · Phase 1 implementation in progress — nothing deployed yet.
+Sections marked **Target** describe the intended end state and become reality as each phase lands.
 
 </div>
 
@@ -36,7 +37,9 @@ In platform engineering, the deliverable is rarely a feature — it's a **path**
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Architecture *(Target)*
+
+> **Target** — the intended end state. This pipeline is not deployed yet; it takes shape as the phases in the [plan](./PLAN.md) land.
 
 ```
 ┌──────────┐   git push    ┌────────────────┐   build + scan   ┌────────────┐
@@ -62,7 +65,7 @@ In platform engineering, the deliverable is rarely a feature — it's a **path**
 
 ---
 
-## 🎯 Skills Showcased
+## 🎯 Skills Showcased *(Target)*
 
 | Domain | Where it lives |
 |---|---|
@@ -76,7 +79,7 @@ In platform engineering, the deliverable is rarely a feature — it's a **path**
 
 ---
 
-## 🧰 Tech Stack
+## 🧰 Tech Stack *(Target)*
 
 | Layer | Choice | Why |
 |---|---|---|
@@ -134,28 +137,32 @@ cd infra && terraform init && terraform apply
 
 ---
 
-## 🔐 Security Posture
+## 🔐 Security Posture *(Target)*
 
-- **No static secrets** — CI authenticates to Azure via OIDC federation (short-lived tokens, nothing stored)
+- **No static secrets** — CI authenticates to Azure via OIDC federation (short-lived tokens, nothing stored); ArgoCD reads the repo via a scoped read-only SSH deploy key (or zero credentials once the repo is public) — never an account-level PAT
 - **Scanning in the pipeline** — Trivy on every container image; tfsec/Checkov on every IaC change
 - **Least privilege at runtime** — containers run as non-root with read-only root filesystem
 - **Defense in depth on the cluster** — restricted Pod Security Admission, default-deny network policies
 - **Hardened edge** — CSP, HSTS, nosniff, and friends at the nginx layer
+- **State hygiene** — Terraform state never leaves Azure Storage and is never committed to git (it contains secrets)
 
 ---
 
-## 💰 Cost Efficiency
+## 💰 Cost Efficiency *(Target)*
 
-Running a Kubernetes cluster on Azure *responsibly*:
+Running a Kubernetes cluster on Azure *responsibly* — two scenarios:
 
-| Item | Approach | Cost |
+| Item | Left running 24/7 | With destroy discipline |
 |---|---|---|
-| AKS (1× B2s) | Destroyed between sessions via `terraform destroy` | ~$3–5 / wk |
-| Registry | GHCR (public) | $0 |
-| Monitoring | In-cluster + Grafana Cloud free tier | $0 |
-| CI/CD | GitHub Actions (public repo) | $0 |
+| AKS (1× B2s node) | ~$30 / mo | ~$3–5 / wk |
+| Managed disk + storage | ~$2 / mo | only while running |
+| Load balancer + public IP | ~$20 / mo | only while running |
+| Registry (GHCR) | $0 | $0 |
+| CI/CD (GitHub Actions) | $0 | $0 |
+| Monitoring (in-cluster) | $0 | $0 |
+| **Monthly total** | **~$55–60** ⚠️ | **~$15–25** |
 
-**The point:** IaC makes platforms *disposable*. Pay for uptime, not ownership.
+**The point:** IaC makes platforms *disposable*. The plan assumes destroy discipline — and the README will publish the final real bill as proof.
 
 ---
 

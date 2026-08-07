@@ -73,7 +73,7 @@ golden-path/
 | Disk/storage/public IP | Destroyed with cluster | ~$1–2/wk |
 | Monitoring | In-cluster kube-prometheus-stack + Grafana Cloud free tier (optional) | $0 |
 | CI/CD | GitHub Actions, free on public repos | $0 |
-| **Total 5 weeks** | | **~$20–35** |
+| **Total 5 weeks** | | **~$20–35** (conservative: ~$55–60/mo if left running 24/7 — the estimate assumes destroy discipline) |
 
 **Rules:** destroy cluster at end of every session (`terraform destroy`); set calendar reminder 3 days before credit expiry; screenshot billing page for README flex.
 
@@ -260,7 +260,9 @@ kubectl port-forward -n argocd svc/argocd-server 8080:443   # login admin
 ```
 
 - Create `k8s/argocd/application.yaml` — Application `golden-path`, source = this git repo path `k8s/`, destination `portfolio` namespace, `automated: prune: true, selfHeal: true`.
-- ArgoCD needs read access to the repo: create a **fine-grained PAT** (Contents: Read) → `argocd repo add https://github.com/<user>/golden-path --username <user> --password <PAT>`.
+- ArgoCD needs repo read access — **not** an account-level PAT (a static secret tied to your account; it would break the "no static secrets" story). Instead:
+  - Repo is **public** → zero credentials needed: `argocd repo add https://github.com/<user>/golden-path`
+  - Repo stays **private** → scoped read-only **SSH deploy key** (revocable, not tied to an account): `argocd repo add git@github.com:<user>/golden-path.git --ssh-private-key-file <deploy-key>`
 - Apply Application; ArgoCD syncs deployment from git.
 
 **Verify GitOps works:** change image tag in `k8s/deployment.yaml`, commit+push → ArgoCD auto-syncs within ~3 min (`argocd app get golden-path` shows Synced/Healthy; `kubectl get pods` shows new revision rolling).
@@ -270,6 +272,11 @@ Commit: `feat: add argocd gitops application` + `ci: add image bump step`.
 ### Task 2.5 — Image-bump automation
 
 `scripts/bump-image.sh`: on CI success, `sed` the image tag in `k8s/deployment.yaml` to the new SHA and commit → triggers ArgoCD sync. Wire into `ci.yml` (`push` job tail, needs `build`), or a small `cd.yml`. This completes the loop: **push → CI → new image → git bump → ArgoCD deploys.**
+
+**Loop-safety (critical):**
+- The bump commit message **must** contain `[skip ci]` — otherwise the bump commit re-triggers CI → infinite loop.
+- Add `concurrency: { group: deploy, cancel-in-progress: false }` to the workflow so bump runs serialize instead of racing each other.
+- Branch protection note: under a protected `main`, the automated bump push needs an explicit allowance (bypass for the workflow's git identity, or a merge queue). Decide and document whichever you choose — in the README, not just the plan.
 
 **Verify:** full pipeline from empty: `git push` → Actions green → ArgoCD Healthy → public URL serves new content.
 
@@ -359,9 +366,9 @@ Sections: architecture diagram (ASCII), the 7-domain mapping table, quickstart (
 2. Export final dashboards JSON → repo.
 3. ```bash
    cd infra && terraform destroy -auto-approve
-   az group delete -n golden-path-state-rg -y   # last: kills state too — keep tfstate export first!
+   az group delete -n golden-path-state-rg -y   # last: kills state too
    ```
-4. Save `terraform.tfstate` export to repo `docs/` (read-only reference) before deleting.
+4. **Never commit `terraform.tfstate`** — it contains secrets (storage account keys, kubeconfigs, passwords). Preserve evidence with redacted screenshots, `terraform output` values, or sanitized snippets only.
 
 ### Task 5.2 — Site moves to free static hosting
 
