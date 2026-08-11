@@ -56,9 +56,9 @@ resource "azurerm_kubernetes_cluster" "main" {
     # update via terraform apply; ARM management plane is NOT affected).
     authorized_ip_ranges = ["182.10.225.250/32"]
   }
-  # AAD-only auth: disables the unauthenticated local "clusterAdmin" kubeconfig.
-  # `az aks get-credentials` (AAD token) keeps working.
-  local_account_disabled = true
+  # NOTE: local_account_disabled requires managed AAD integration (not enabled
+  # yet — see docs/security.md known gaps). The API-server IP restriction above
+  # already removes the exposure that local accounts would otherwise create.
 
   tags = {
     project = "golden-path"
