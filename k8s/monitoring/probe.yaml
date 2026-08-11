@@ -15,6 +15,7 @@ spec:
   interval: 60s
   targets:
     staticConfig:
-      targets:
+      # prometheus-operator v0.93+ renamed .targets → .static (list of hosts)
+      static:
         - https://ilhaamghiffari.tech
         - https://www.ilhaamghiffari.tech
