@@ -18,6 +18,7 @@ and the **reasoning** behind each choice.
 | **Default-deny network policy** | `k8s/network-policy.yaml` | Calico-enforced, GitOps-managed: default deny in/out; allow only ingress-nginx → app :80 and app → kube-dns :53 |
 | **AKS API server lockdown** | `infra/main.tf` | `api_server_access_profile.authorized_ip_ranges = [<home IP>/32]` — control plane unreachable from anywhere else (Trivy AZU-0041, was CRITICAL) |
 | **Key Vault deny-by-default** | `infra/main.tf` | `network_acls { default_action = "Deny", bypass = "AzureServices" }` + purge protection (Trivy AZU-0013, was CRITICAL) |
+| **TLS + HSTS** | cert-manager (Let's Encrypt prod) + `site/nginx.conf` | SAN cert for `ilhaamghiffari.tech` + `www` (auto-renew), HTTP→HTTPS redirect, `Strict-Transport-Security: max-age=31536000; includeSubDomains` |
 | Edge hardening | `site/nginx.conf` | CSP, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `server_tokens off` (no version banner) |
 | Secrets hygiene | repo-wide | Terraform state lives only in Azure Storage; no `.env`/credentials committed; ArgoCD auth = **scoped read-only SSH deploy key** (revocable, repo-level, not an account PAT) |
 | Pull-path auth | GHCR | package is public → AKS pulls anonymously; **no imagePullSecret / static registry credential** in the cluster |
@@ -40,13 +41,13 @@ and the **reasoning** behind each choice.
 | No OMS/Container Insights logging (Trivy AZU-0040) | MEDIUM | Costs a Log Analytics workspace; Prometheus/Grafana (Phase 3) is the observability story instead |
 | Not a private cluster (Trivy AZU-0065) | MEDIUM | A private API server breaks the public demo + kubectl-from-home workflow; mitigated with authorized IP ranges |
 | No customer-managed disk encryption (Trivy AZU-0067) | LOW | Azure SSE already encrypts managed disks at rest by default; CMK adds key-management surface |
-| No TLS yet (plain HTTP via sslip.io) | — | Cloudflare Tunnel is the planned fix (free HTTPS, no domain) |
+| ACME solver port exemption | — | `allow-acme-http-solver` netpol opens :8089 to ingress-nginx only while cert-manager challenges run (tight :80-only rule kept for the app) |
 
 ## Threat-model thinking (short version)
 
 1. **Someone gets write access to this repo** → CI runs their code. Mitigations: Actions pinned, scans gate the push, secrets are short-lived tokens, and the whole platform is disposable (`terraform destroy` restores the world in ~15 min).
 2. **The cluster is compromised** → pods run as non-root with read-only FS and no caps; default-deny netpol (enforced) contains east-west movement; Key Vault holds nothing critical yet; nothing in the cluster can mint Azure credentials (workload identity is deliberately not wired up).
-3. **The public edge is scanned/probed** → nginx answers 404/403, no version banner, no TLS yet (planned), CSP prevents injection-styled payloads from running in-browser.
+3. **The public edge is scanned/probed** → nginx answers 404/403, no version banner, TLS + HSTS active, CSP prevents injection-styled payloads from running in-browser.
 
 ## Known gaps (honest)
 

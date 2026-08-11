@@ -26,7 +26,10 @@ GitHub Actions: ci.yml
               Deployment rollout (2 replicas) → nginx pods serve the new build
                     │
                     ▼
-              nginx-ingress controller → http://40.119.232.45.sslip.io
+              nginx-ingress controller (TLS via cert-manager/Let's Encrypt)
+                    │
+                    ▼
+              https://ilhaamghiffari.tech (+ www)
 ```
 
 ### Components
@@ -35,7 +38,7 @@ GitHub Actions: ci.yml
 |---|---|
 | **AKS** | `golden-path-aks`, Kubernetes 1.36.2, 1× `Standard_B2s` system pool, kubenet + **Calico** (Calico = NetworkPolicy support later, without cluster recreation) |
 | **Networking** | VNet `10.0.0.0/16`; AKS subnet `10.0.1.0/24`; service CIDR `10.1.0.0/16`, DNS `10.1.0.10` (see war story #2) |
-| **Ingress** | ingress-nginx via Helm; host `40.119.232.45.sslip.io` (no domain purchased — free tier decision) |
+| **Ingress** | ingress-nginx via Helm; hosts `ilhaamghiffari.tech` + `www.ilhaamghiffari.tech`; **TLS** via cert-manager (ClusterIssuer `letsencrypt-prod`, HTTP-01) → Let's Encrypt SAN cert in `golden-path-tls` secret |
 | **ArgoCD** | Application source `git@github.com:IlhaamGhiffari/golden-path.git`, path `k8s`, dest `portfolio` ns |
 | **Registry** | GHCR package `golden-path` — public (AKS pulls anonymously; no imagePullSecrets) |
 | **Key Vault** | `golden-path-kv` (Standard) — exists for the story; workload identity integration is future work |

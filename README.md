@@ -18,7 +18,7 @@ Every commit travels the golden path: CI builds it, scanners vet it, containers 
 ![Grafana](https://img.shields.io/badge/Grafana-F46800?logo=grafana&logoColor=white&style=for-the-badge)
 ![Trivy](https://img.shields.io/badge/Trivy-1904DA?logo=trivy&logoColor=white&style=for-the-badge)
 
-**Status:** 🟢 Phases 1–2 complete — the site is **live** at [http://40.119.232.45.sslip.io](http://40.119.232.45.sslip.io), deployed purely by GitOps.
+**Status:** 🟢 Phases 1–2 complete — the site is **live** at [https://ilhaamghiffari.tech](https://ilhaamghiffari.tech) (TLS via cert-manager/Let's Encrypt), deployed purely by GitOps.
 
 </div>
 
@@ -50,8 +50,8 @@ In platform engineering, the deliverable is rarely a feature — it's a **path**
 └──────────┘                └────────────────┘                 └─────┬──────┘
                                                                      │ ingress
                                                             ┌───────▼──────┐
-                                                            │ 40.119.232.45│
-                                                            │   .sslip.io  │
+                                                            │ilhaamghiffari│
+                                                            │    .tech     │
                                                             └──────────────┘
 ```
 
@@ -59,7 +59,7 @@ In platform engineering, the deliverable is rarely a feature — it's a **path**
 2. CI **builds** the Astro site (`npm ci && npm run check && npm run build`), **scans** the container with Trivy (HIGH/CRITICAL gates the push), and **pushes** to GHCR tagged `:<sha>` + `:latest`
 3. `scripts/bump-image.sh` commits the new image tag into `k8s/deployment.yaml` with `[skip ci]`
 4. **ArgoCD** (automated sync, prune, self-heal) detects the drift and rolls out the new image
-5. The site is served via nginx-ingress at **http://40.119.232.45.sslip.io**
+5. The site is served via nginx-ingress with a cert-manager/Let's Encrypt certificate at **https://ilhaamghiffari.tech** (+ www) — TLS and HSTS included
 
 **Proof this loop works:** every commit in this repo since `276e224` was deployed by ArgoCD — including this README's host site, with zero manual `kubectl apply` for app changes.
 
@@ -169,7 +169,7 @@ cd infra && terraform destroy -auto-approve
 - **Hardened edge** — CSP, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `server_tokens off`
 - **State hygiene** — Terraform state only in Azure Storage (never committed)
 
-**Next (Phase 3):** OIDC federation for Azure in CI, Pod Security Admission `restricted` enforcement, default-deny NetworkPolicy (Calico already enabled), IaC scanning (tfsec/Checkov), HSTS once TLS lands.
+**Next (Phase 3):** OIDC federation for Azure in CI, IaC scanning (tfsec/Checkov). Already done ahead of schedule: TLS + HSTS (cert-manager), PSA `restricted` enforcement, default-deny NetworkPolicy.
 
 ---
 
@@ -195,13 +195,12 @@ Running a Kubernetes cluster on Azure *responsibly*:
 - [x] Astro site + containerized build
 - [x] CI/CD pipeline (build → scan → push → GitOps bump)
 - [x] AKS provisioning + GitOps deploy (ArgoCD)
-- [x] Public URL via ingress (sslip.io)
+- [x] Public URL via ingress + TLS (cert-manager/Let's Encrypt, HSTS)
 - [x] Documentation (this README + `docs/`)
 - [ ] Observability stack (Prometheus/Grafana) + uptime probes
-- [ ] Security hardening pass (OIDC, PSA, network policy, IaC scan)
+- [ ] Security hardening pass (OIDC for Azure in CI, IaC scanning)
 - [ ] TLS via Cloudflare Tunnel
 - [ ] Public release + demo video
-
 ---
 
 ## 📄 License
