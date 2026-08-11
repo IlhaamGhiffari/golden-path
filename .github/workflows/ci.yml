@@ -62,7 +62,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write
     steps:
       - uses: actions/checkout@v4
@@ -82,3 +82,8 @@ jobs:
           tags: |
             ${{ env.IMAGE }}:${{ github.sha }}
             ${{ env.IMAGE }}:latest
+      # GitOps trigger: bump the image tag in k8s/deployment.yaml and commit.
+      # ArgoCD detects the drift and syncs the cluster. The commit message
+      # contains [skip ci] so this never re-triggers this workflow.
+      - name: Bump image tag in k8s manifests (GitOps)
+        run: ./scripts/bump-image.sh "${{ github.sha }}"
