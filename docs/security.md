@@ -51,6 +51,5 @@ and the **reasoning** behind each choice.
 
 ## Known gaps (honest)
 
-- No TLS yet (plain HTTP via sslip.io) — Cloudflare Tunnel is the planned fix (free HTTPS, no domain)
 - Admin credentials for ArgoCD/Key Vault follow the vendor defaults on a fresh install — acceptable because the cluster is ephemeral and ArgoCD is only reachable via `kubectl port-forward`, but it's on the list
 - No runtime vulnerability scanning of running images (trivy scans at build time; Falco-style runtime monitoring is future work)
