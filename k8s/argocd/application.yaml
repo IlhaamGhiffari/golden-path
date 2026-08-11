@@ -9,6 +9,8 @@ spec:
     repoURL: git@github.com:IlhaamGhiffari/golden-path.git
     targetRevision: main
     path: k8s
+    directory:
+      recurse: true # include subdirs (cert-manager/, monitoring/) — default is false!
   destination:
     server: https://kubernetes.default.svc
     namespace: portfolio
