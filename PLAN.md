@@ -334,7 +334,6 @@ Commit per item. **Verify each:** run the workflow and show green scans; `kubect
 **Objective:** Make the portfolio *interviewable*. **Cost: ~$5.**
 
 ### Task 4.1 — README.md (the real resume)
-
 Sections: architecture diagram (ASCII), the 7-domain mapping table, quickstart (`make up` style: bootstrap-state → terraform apply → helm install), pipeline walkthrough, cost breakdown (screenshot billing page), "what I'd do differently". Aim: a platform engineer should finish it and want to interview you.
 
 ### Task 4.2 — Site content
