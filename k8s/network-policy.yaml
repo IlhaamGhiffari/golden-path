@@ -47,3 +47,25 @@ spec:
           protocol: UDP
         - port: 53
           protocol: TCP
+---
+# cert-manager HTTP-01 solver pods listen on 8089 (not 80) — allow ingress-nginx
+# to reach them during ACME challenges, without widening the app's :80-only rule.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-acme-http-solver
+  namespace: portfolio
+spec:
+  podSelector:
+    matchLabels:
+      acme.cert-manager.io/http01-solver: "true"
+  policyTypes: ["Ingress"]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - port: 8089
+          protocol: TCP
+
