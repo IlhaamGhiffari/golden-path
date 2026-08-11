@@ -9,6 +9,9 @@ RUN npm run build
 # ---- Serve stage ----
 FROM nginx:1.27-alpine
 
+# patch base image packages (libxml2, musl, zlib, nghttp2, ...) — keeps Trivy clean
+RUN apk upgrade --no-cache
+
 # custom server config (gzip, security headers, caching)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html
