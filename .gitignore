@@ -31,3 +31,6 @@ Thumbs.db
 # Editors
 .vscode/
 .idea/
+
+# Terraform plan files
+*.tfplan

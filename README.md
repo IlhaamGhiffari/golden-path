@@ -18,8 +18,7 @@ Every commit travels the golden path: CI builds it, scanners vet it, containers 
 ![Grafana](https://img.shields.io/badge/Grafana-F46800?logo=grafana&logoColor=white&style=for-the-badge)
 ![Trivy](https://img.shields.io/badge/Trivy-1904DA?logo=trivy&logoColor=white&style=for-the-badge)
 
-**Status:** 🟡 Planning complete · Phase 1 implementation in progress — nothing deployed yet.
-Sections marked **Target** describe the intended end state and become reality as each phase lands.
+**Status:** 🟢 Phases 1–2 complete — the site is **live** at [http://40.119.232.45.sslip.io](http://40.119.232.45.sslip.io), deployed purely by GitOps.
 
 </div>
 
@@ -29,69 +28,69 @@ Sections marked **Target** describe the intended end state and become reality as
 
 Most portfolios show *what* someone built. This one shows **how it runs**.
 
-In platform engineering, the deliverable is rarely a feature — it's a **path** that makes delivery safe, fast, and boring. So this repo practices what it preaches: a static Astro site, deployed to Kubernetes on Azure through a complete internal-developer-platform-style pipeline, with every layer declared as code and every claim backed by a scanner or a dashboard.
+In platform engineering, the deliverable is rarely a feature — it's a **path** that makes delivery safe, fast, and boring. So this repo practices what it preaches: a static Astro site, deployed to Kubernetes on Azure through a complete internal-developer-platform-style pipeline, with every layer declared as code and every claim backed by a scanner or a live URL.
 
-- 🧱 **Everything is code** — infra, config, dashboards, and pipelines all live in this repo
-- 🔁 **Nothing is manual** — the only human action is `git push`
-- 💸 **Everything is disposable** — `terraform destroy` between sessions keeps the monthly bill at pocket-change level
+- 🧱 **Everything is code** — infra, config, manifests, and pipelines all live in this repo
+- 🔁 **Nothing is manual** — the only human action is `git push`; ArgoCD does the rest
+- 💸 **Everything is disposable** — `terraform destroy` between sessions keeps the bill at pocket-change level
 
 ---
 
-## 🏗️ Architecture *(Target)*
-
-> **Target** — the intended end state. This pipeline is not deployed yet; it takes shape as the phases in the [plan](./PLAN.md) land.
+## 🏗️ Architecture — live today
 
 ```
 ┌──────────┐   git push    ┌────────────────┐   build + scan   ┌────────────┐
 │   You    │ ─────────────► │ GitHub Actions │ ───────────────► │    GHCR    │
 └──────────┘                └────────────────┘                  └─────┬──────┘
                                                                      │ pull
-                                                                     ▼
-┌──────────┐   GitOps sync  ┌────────────────┐    deploy     ┌────────────┐
-│  ArgoCD  │ ◄───────────── │   git (main)   │ ◄──────────── │     AKS    │
-└──────────┘                └────────────────┘               └─────┬──────┘
-                                                                    │ scrape
+   bump commit [skip ci]                                       ┌─────▼──────┐
+   (image tag → new SHA)                                       │     AKS    │
+┌──────────┐   GitOps sync  ┌────────────────┐    deploy       │ (1× B2s)   │
+│  ArgoCD  │ ◄───────────── │   git (main)   │ ◄────────────── │  nginx app │
+└──────────┘                └────────────────┘                 └─────┬──────┘
+                                                                     │ ingress
                                                             ┌───────▼──────┐
-                                                            │ Prometheus   │
-                                                            │  +  Grafana  │
+                                                            │ 40.119.232.45│
+                                                            │   .sslip.io  │
                                                             └──────────────┘
 ```
 
-1. **Push** to `main` triggers GitHub Actions
-2. CI **builds** the Astro site, **scans** it (Trivy), and **pushes** the container image to GHCR
-3. A version-bump commit updates the image tag in the Kubernetes manifests
-4. **ArgoCD** detects the drift and **syncs** the AKS cluster
-5. **Prometheus + Grafana** scrape the cluster and blackbox-probe the site — uptime and latency, always visible
+1. **Push** to `main` triggers GitHub Actions (path-filtered to `site/**`)
+2. CI **builds** the Astro site (`npm ci && npm run check && npm run build`), **scans** the container with Trivy (HIGH/CRITICAL gates the push), and **pushes** to GHCR tagged `:<sha>` + `:latest`
+3. `scripts/bump-image.sh` commits the new image tag into `k8s/deployment.yaml` with `[skip ci]`
+4. **ArgoCD** (automated sync, prune, self-heal) detects the drift and rolls out the new image
+5. The site is served via nginx-ingress at **http://40.119.232.45.sslip.io**
+
+**Proof this loop works:** every commit in this repo since `276e224` was deployed by ArgoCD — including this README's host site, with zero manual `kubectl apply` for app changes.
 
 ---
 
-## 🎯 Skills Showcased *(Target)*
+## 🎯 Skills Showcased
 
-| Domain | Where it lives |
-|---|---|
-| ☁️ **Cloud (Azure)** | Terraform-provisioned landing zone: resource group, VNet, AKS, Key Vault |
-| 🧱 **IaC** | Terraform with remote state in Azure Storage, `plan` gating CI |
-| 📦 **Containerization** | Multi-stage Dockerfile, non-root runtime, healthcheck, SHA-pinned tags |
-| ☸️ **Kubernetes** | AKS + manifests (deployment, service, ingress, HPA, network policies) |
-| 🔄 **CI/CD** | GitHub Actions: lint → build → scan → push → GitOps sync |
-| 🔐 **Security** | OIDC federation (zero static secrets), Trivy container + IaC scanning, restricted Pod Security, hardened nginx |
-| 📈 **Observability** | kube-prometheus-stack, Blackbox uptime probes, dashboards as code |
+| Domain | Where it lives | Status |
+|---|---|---|
+| ☁️ **Cloud (Azure)** | `infra/` — RG, VNet, AKS (1.36.2), Key Vault, OIDC issuer | ✅ live |
+| 🧱 **IaC** | Terraform + remote state (Azure Storage, locked), `plan` before `apply` | ✅ live |
+| 📦 **Containerization** | Multi-stage Dockerfile, `apk upgrade` for CVE patching, non-root, healthcheck | ✅ live |
+| ☸️ **Kubernetes** | AKS + manifests: deployment (PSA-restricted-compliant), service, ingress, HPA | ✅ live |
+| 🔄 **CI/CD** | GitHub Actions: build → check → scan → push → GitOps bump | ✅ live |
+| 🔐 **Security** | Trivy clean (0 HIGH/CRITICAL), SHA-pinned actions, read-only deploy key, hardened nginx | ✅ live |
+| 📈 **Observability** | kube-prometheus-stack, Blackbox probes, dashboards-as-code | ⏳ Phase 3 |
 
 ---
 
-## 🧰 Tech Stack *(Target)*
+## 🧰 Tech Stack
 
 | Layer | Choice | Why |
 |---|---|---|
-| Frontend | **Astro** (static, TypeScript) | Ships zero JS by default; content-first; tiny container |
-| Web server | **nginx** | Industry standard, hardened headers, ~50 MB final image |
-| IaC | **Terraform** (azurerm) | The cloud-agnostic standard; remote state + locking |
-| Container registry | **GHCR** | Free, public images, native GitHub integration |
-| Orchestration | **AKS** (Kubernetes) | Managed control plane, the platform-engineering lingua franca |
-| GitOps | **ArgoCD** | Pull-based sync, self-healing, the most recognized GitOps tool |
-| CI/CD | **GitHub Actions** | Free on public repos, OIDC auth, workflow-as-code |
-| Security | **Trivy** (+ tfsec/Checkov) | Container + IaC scanning in the same pipeline |
-| Monitoring | **Prometheus + Grafana** | kube-prometheus-stack, ServiceMonitors, dashboards-as-code |
+| Frontend | **Astro 7** (static, TypeScript) | Ships zero JS by default; content-first; tiny container |
+| Web server | **nginx 1.27-alpine** | Hardened headers, ~50 MB final image, non-root `USER nginx` |
+| IaC | **Terraform** (azurerm ~> 4.0) | The cloud-agnostic standard; remote state + locking |
+| Container registry | **GHCR** | Public images, native GitHub integration, free |
+| Orchestration | **AKS** (Kubernetes 1.36.2, kubenet + Calico) | Managed control plane; Calico enables NetworkPolicy later |
+| GitOps | **ArgoCD** | Pull-based sync, self-healing, automated prune |
+| CI/CD | **GitHub Actions** | Free on public repos, path-filtered, workflow-as-code |
+| Security | **Trivy** (SHA-pinned action) | Container scanning in the same pipeline |
 
 ---
 
@@ -99,27 +98,34 @@ In platform engineering, the deliverable is rarely a feature — it's a **path**
 
 ```
 golden-path/
-├── site/                      # Astro static site
+├── site/                      # Astro static site (the portfolio)
 │   ├── Dockerfile             # multi-stage: node build → nginx serve
-│   └── nginx.conf             # gzip, security headers, caching
+│   ├── nginx.conf             # gzip, security headers, caching, non-root logs
+│   └── src/pages/             # index, about, projects, blog, contact
 ├── infra/                     # Terraform — the Azure landing zone
-│   ├── main.tf                # RG, AKS, VNet, Key Vault
-│   └── backend.tf             # state in Azure Storage (blob + lock)
-├── k8s/                       # Kubernetes manifests (GitOps source of truth)
-│   ├── deployment.yaml
-│   ├── service.yaml
-│   ├── ingress.yaml
-│   └── network-policy.yaml
-├── monitoring/                # dashboards & probes as code
-├── .github/workflows/         # ci.yml, cd.yml
-└── scripts/                   # bootstrap-state.sh, bump-image.sh
+│   ├── main.tf                # RG, VNet, AKS, Key Vault
+│   ├── providers.tf           # azurerm + remote state backend
+│   └── variables.tf           # region pinned (student-sub restriction)
+├── k8s/                       # GitOps source of truth (ArgoCD-managed)
+│   ├── deployment.yaml        # image tag bumped by CI
+│   ├── service.yaml / hpa.yaml / ingress.yaml / namespace.yaml
+│   ├── ingress-nginx-values.yaml   # AKS LB health-probe fix
+│   └── argocd/application.yaml     # the GitOps Application
+├── scripts/
+│   ├── bootstrap-state.sh     # one-time: storage account for remote state
+│   └── bump-image.sh          # CI → bump tag → commit [skip ci]
+├── docs/                      # deep dives for interviewers
+│   ├── architecture.md        # pipeline walkthrough + war stories
+│   └── security.md            # threat model, controls, what's next
+├── .github/workflows/ci.yml   # build → scan → push → bump
+└── PLAN.md                    # the 5-phase implementation plan
 ```
 
 ---
 
 ## 🚀 Getting Started
 
-> **Prerequisites:** `az` (logged in), `terraform`, `docker`, `kubectl`, `helm`, `node ≥ 22`, `gh`
+> **Prerequisites:** `az` (logged in), `terraform`, `docker`, `kubectl`, `helm`, `node ≥ 22`, `gh`, `argocd`
 
 ```bash
 # 1. Clone
@@ -131,49 +137,69 @@ git clone git@github.com:IlhaamGhiffari/golden-path.git && cd golden-path
 # 3. Provision the platform (RG → VNet → AKS → Key Vault)
 cd infra && terraform init && terraform apply
 
-# 4. Deploy everything via GitOps
-#    — push to main, ArgoCD does the rest. That's the whole point. 😄
+# 4. Cluster access + ingress controller (AKS probe fix baked into values)
+az aks get-credentials -g golden-path-rg -n golden-path-aks
+helm install ingress-nginx ingress-nginx/ingress-nginx -n ingress-nginx \
+  --create-namespace -f k8s/ingress-nginx-values.yaml
+
+# 5. ArgoCD + repo access via scoped read-only SSH deploy key
+helm install argocd argo/argo-cd -n argocd --create-namespace
+argocd repo add git@github.com:IlhaamGhiffari/golden-path.git \
+  --ssh-private-key-path ~/.ssh/gp-argocd-deploykey --insecure-ignore-host-key
+kubectl apply -f k8s/argocd/application.yaml
+
+# 6. Deploy: just push to main. ArgoCD does the rest. 😄
+```
+
+**Teardown (end of session — cost discipline):**
+```bash
+cd infra && terraform destroy -auto-approve
 ```
 
 ---
 
-## 🔐 Security Posture *(Target)*
+## 🔐 Security Posture
 
-- **No static secrets** — CI authenticates to Azure via OIDC federation (short-lived tokens, nothing stored); ArgoCD reads the repo via a scoped read-only SSH deploy key (or zero credentials once the repo is public) — never an account-level PAT
-- **Scanning in the pipeline** — Trivy on every container image; tfsec/Checkov on every IaC change
-- **Least privilege at runtime** — containers run as non-root with read-only root filesystem
-- **Defense in depth on the cluster** — restricted Pod Security Admission, default-deny network policies
-- **Hardened edge** — CSP, HSTS, nosniff, and friends at the nginx layer
-- **State hygiene** — Terraform state never leaves Azure Storage and is never committed to git (it contains secrets)
+**In place today** (details in [docs/security.md](./docs/security.md)):
+
+- **Trivy clean** — 0 HIGH/CRITICAL in CI; base image CVE-patched via `apk upgrade` in the Dockerfile
+- **Supply-chain hardened** — trivy-action pinned to a commit SHA after its Mar-2026 compromise; all Actions version-pinned
+- **No static secrets** — ArgoCD reads git via a **scoped read-only SSH deploy key** (revocable, not an account PAT); GHCR package is public so AKS pulls anonymously
+- **Least privilege at runtime** — non-root (`101`), read-only root filesystem, all capabilities dropped, `seccomp: RuntimeDefault`, no privilege escalation
+- **Hardened edge** — CSP, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `server_tokens off`
+- **State hygiene** — Terraform state only in Azure Storage (never committed)
+
+**Next (Phase 3):** OIDC federation for Azure in CI, Pod Security Admission `restricted` enforcement, default-deny NetworkPolicy (Calico already enabled), IaC scanning (tfsec/Checkov), HSTS once TLS lands.
 
 ---
 
-## 💰 Cost Efficiency *(Target)*
+## 💰 Cost Efficiency
 
-Running a Kubernetes cluster on Azure *responsibly* — two scenarios:
+Running a Kubernetes cluster on Azure *responsibly*:
 
 | Item | Left running 24/7 | With destroy discipline |
 |---|---|---|
 | AKS (1× B2s node) | ~$30 / mo | ~$3–5 / wk |
 | Managed disk + storage | ~$2 / mo | only while running |
 | Load balancer + public IP | ~$20 / mo | only while running |
-| Registry (GHCR) | $0 | $0 |
-| CI/CD (GitHub Actions) | $0 | $0 |
-| Monitoring (in-cluster) | $0 | $0 |
+| Registry (GHCR) / CI / monitoring | $0 | $0 |
 | **Monthly total** | **~$55–60** ⚠️ | **~$15–25** |
 
-**The point:** IaC makes platforms *disposable*. The plan assumes destroy discipline — and the README will publish the final real bill as proof.
+**The point:** IaC makes platforms *disposable*. The final real bill gets published here as proof.
 
 ---
 
 ## 🗺️ Roadmap
 
 - [x] Repo bootstrap, remote state strategy
-- [ ] Astro site + containerized build
-- [ ] CI/CD pipeline (build → scan → push)
-- [ ] AKS provisioning + GitOps deploy
-- [ ] Observability stack + uptime probes
-- [ ] Security hardening pass
+- [x] Astro site + containerized build
+- [x] CI/CD pipeline (build → scan → push → GitOps bump)
+- [x] AKS provisioning + GitOps deploy (ArgoCD)
+- [x] Public URL via ingress (sslip.io)
+- [x] Documentation (this README + `docs/`)
+- [ ] Observability stack (Prometheus/Grafana) + uptime probes
+- [ ] Security hardening pass (OIDC, PSA, network policy, IaC scan)
+- [ ] TLS via Cloudflare Tunnel
 - [ ] Public release + demo video
 
 ---
