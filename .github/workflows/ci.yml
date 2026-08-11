@@ -74,6 +74,37 @@ jobs:
           exit-code: '1'
           format: table
 
+  # Terraform plan against the real remote state — authenticated via OIDC
+  # (PLAN 3.3.1): no client secret anywhere, only federated identity.
+  tf-plan:
+    needs: scan-iac
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # OIDC token exchange
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          auth-type: OIDC
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.15.8
+      # state storage key fetched at runtime via the SP's
+      # "Storage Account Key Operator" role — never stored as a secret
+      - name: Fetch state access key
+        run: |
+          KEY=$(az storage account keys list -g golden-path-state-rg -n gpstateilhaam --query '[0].value' -o tsv)
+          echo "ARM_ACCESS_KEY=$KEY" >> "$GITHUB_ENV"
+      - name: Terraform plan (remote state, OIDC auth)
+        working-directory: infra
+        run: |
+          terraform init -no-color
+          terraform plan -no-color
+
   push:
     needs: [scan, scan-iac]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
