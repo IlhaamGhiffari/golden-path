@@ -3,6 +3,10 @@ kind: ServiceMonitor
 metadata:
   name: golden-path
   namespace: portfolio
+  labels:
+    # kube-prometheus-stack's Prometheus CR selects ServiceMonitors by
+    # release label — without this the target is never scraped
+    release: kube-prometheus-stack
 spec:
   selector:
     matchLabels:
