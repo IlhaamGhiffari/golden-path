@@ -25,7 +25,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: golden-path
-          image: ghcr.io/ilhaamghiffari/golden-path:276e22467047865bee364f30b04419011a9f41ce
+          image: ghcr.io/ilhaamghiffari/golden-path:bcff9d9a907f220402357ee87e0cb6ff9df5be43
           ports:
             - name: http
               containerPort: 80
