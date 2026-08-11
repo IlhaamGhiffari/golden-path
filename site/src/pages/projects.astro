@@ -1,0 +1,58 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const projects = [
+  {
+    name: 'golden-path',
+    status: 'In progress',
+    statusClass: 'wip',
+    description:
+      'The flagship: this very site, delivered end-to-end via a golden path — Terraform to Azure (AKS, Key Vault), multi-stage Docker, ArgoCD GitOps, GitHub Actions with OIDC, Trivy scanning, and Prometheus/Grafana observability. The pipeline is the portfolio.',
+    links: [
+      { href: 'https://github.com/IlhaamGhiffari/golden-path', label: 'GitHub' },
+      { href: '/', label: 'Live demo (this site)' },
+    ],
+  },
+  {
+    name: 'Aceh Resilience Monitor',
+    status: 'Top 20 · 2026',
+    statusClass: 'live',
+    description:
+      'Datathon AI Impact Challenge 2026 (Microsoft Elevate × Dicoding). An AI-driven monitoring concept for regional resilience in Aceh — selected as one of the top 20 teams.',
+    links: [{ href: 'https://github.com/IlhaamGhiffari', label: 'GitHub' }],
+  },
+  {
+    name: 'Debit Andalan — F.J. Mock (hydrology)',
+    status: 'Commercial',
+    statusClass: 'live',
+    description:
+      'Commercial water-resources engineering project: rainfall-runoff modeling (F.J. Mock), ETo (FAO-56) and Q95 reliability discharge for a ~25.8 km² sub-watershed in Aceh Besar, Indonesia.',
+    links: [],
+  },
+];
+---
+<BaseLayout title="Projects — Ilhaam Ghiffari" description="Projects by Ilhaam Ghiffari — platform engineering and data engineering.">
+  <section>
+    <h1>Projects</h1>
+    <p class="sub">A mix of platform engineering and applied data engineering.</p>
+
+    {
+      projects.map((p) => (
+        <article class="project-card">
+          <h3>
+            {p.name}
+            <span class={`status ${p.statusClass}`}>{p.status}</span>
+          </h3>
+          <p>{p.description}</p>
+          {p.links.length > 0 && (
+            <div class="links">
+              {p.links.map((l) => (
+                <a href={l.href} rel="noopener">{l.label}</a>
+              ))}
+            </div>
+          )}
+        </article>
+      ))
+    }
+  </section>
+</BaseLayout>

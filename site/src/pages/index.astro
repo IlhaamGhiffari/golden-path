@@ -1,0 +1,40 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const skills = [
+  { name: 'Cloud', detail: 'Microsoft Azure — AKS, Key Vault, VNet, remote state' },
+  { name: 'IaC', detail: 'Terraform with remote state and plan-gated CI' },
+  { name: 'Containerization', detail: 'Multi-stage Docker builds, non-root, hardened nginx' },
+  { name: 'Kubernetes', detail: 'AKS, HPA, network policies, Pod Security Admission' },
+  { name: 'CI/CD', detail: 'GitHub Actions with OIDC — no static secrets' },
+  { name: 'GitOps', detail: 'ArgoCD — declarative sync, self-healing deploys' },
+  { name: 'Security', detail: 'Trivy scanning, zero static secrets, security headers' },
+  { name: 'Observability', detail: 'Prometheus, Grafana dashboards-as-code, Blackbox probes' },
+];
+---
+<BaseLayout title="Ilhaam Ghiffari — Platform Engineering Portfolio" description="Platform engineering portfolio of Ilhaam Ghiffari — cloud, IaC, containers, Kubernetes, GitOps, CI/CD, security, observability.">
+  <section class="hero">
+    <p class="eyebrow">Platform Engineering Portfolio</p>
+    <h1>Ilhaam Ghiffari</h1>
+    <p class="tagline">I build golden paths — delivery pipelines that deploy themselves.</p>
+    <p class="sub">Cloud · IaC · Containers · Kubernetes · GitOps · CI/CD · Security · Observability</p>
+    <div class="cta">
+      <a class="btn primary" href="/projects">See the projects</a>
+      <a class="btn" href="https://github.com/IlhaamGhiffari" rel="noopener">GitHub</a>
+    </div>
+  </section>
+
+  <section id="skills">
+    <h2>What I work with</h2>
+    <ul class="skill-grid">
+      {
+        skills.map((s) => (
+          <li class="skill-card">
+            <h3>{s.name}</h3>
+            <p>{s.detail}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</BaseLayout>

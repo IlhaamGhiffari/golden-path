@@ -1,0 +1,31 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const posts = [
+  {
+    title: 'Deploying my portfolio like a platform product',
+    excerpt: 'How this site ships: push to main → CI builds and scans → ArgoCD deploys to AKS. Zero manual steps.',
+  },
+  {
+    title: 'Why GitOps',
+    excerpt: 'Declarative state, self-healing clusters, and the audit trail — what GitOps actually buys you.',
+  },
+];
+---
+<BaseLayout title="Blog — Ilhaam Ghiffari" description="Blog by Ilhaam Ghiffari — platform engineering notes.">
+  <section>
+    <h1>Blog</h1>
+    <p class="sub">Posts coming soon — first drafts are already outlined.</p>
+
+    <ul class="blog-list">
+      {
+        posts.map((post) => (
+          <li>
+            <h3>{post.title}</h3>
+            <p>{post.excerpt}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</BaseLayout>

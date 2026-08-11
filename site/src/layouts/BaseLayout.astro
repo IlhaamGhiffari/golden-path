@@ -1,0 +1,192 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = 'Platform engineering portfolio of Ilhaam Ghiffari.' } = Astro.props;
+
+const nav = [
+  { href: '/', label: 'Home' },
+  { href: '/about', label: 'About' },
+  { href: '/projects', label: 'Projects' },
+  { href: '/blog', label: 'Blog' },
+  { href: '/contact', label: 'Contact' },
+];
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <style is:global>
+      :root {
+        --bg: #0b1220;
+        --bg-soft: #101a2f;
+        --bg-card: #0f172a;
+        --border: #233047;
+        --text: #e2e8f0;
+        --muted: #8ea0b8;
+        --accent: #38bdf8;
+        --radius: 10px;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        line-height: 1.65;
+      }
+      a { color: var(--accent); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+
+      /* header */
+      .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: rgba(11, 18, 32, 0.85);
+        backdrop-filter: blur(8px);
+        border-bottom: 1px solid var(--border);
+      }
+      .nav {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 0 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 60px;
+      }
+      .brand { font-weight: 700; color: var(--text); font-size: 1.05rem; }
+      .brand:hover { text-decoration: none; color: var(--accent); }
+      .nav ul { list-style: none; display: flex; gap: 1.25rem; margin: 0; padding: 0; }
+      .nav a { color: var(--muted); font-size: 0.95rem; }
+      .nav a:hover, .nav a[aria-current='page'] { color: var(--accent); text-decoration: none; }
+
+      main { max-width: 960px; margin: 0 auto; padding: 3rem 1.25rem 4rem; }
+
+      /* hero */
+      .hero { padding: 2.5rem 0 3rem; }
+      .eyebrow {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        color: var(--accent);
+        font-size: 0.85rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin: 0 0 0.75rem;
+      }
+      h1 { font-size: 3rem; margin: 0 0 0.75rem; letter-spacing: -0.02em; }
+      .tagline { font-size: 1.35rem; color: var(--text); margin: 0 0 0.5rem; font-weight: 600; }
+      .sub { color: var(--muted); margin: 0 0 1.75rem; }
+      .cta { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+      .btn {
+        display: inline-block;
+        padding: 0.6rem 1.25rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        color: var(--text);
+        background: var(--bg-soft);
+        font-weight: 600;
+      }
+      .btn:hover { text-decoration: none; border-color: var(--accent); color: var(--accent); }
+      .btn.primary { background: var(--accent); border-color: var(--accent); color: #06121f; }
+      .btn.primary:hover { background: #7dd3fc; border-color: #7dd3fc; }
+
+      /* sections */
+      section { margin-bottom: 3rem; }
+      h2 { font-size: 1.6rem; margin: 0 0 1.25rem; letter-spacing: -0.01em; }
+
+      /* skill grid */
+      .skill-grid {
+        list-style: none;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1rem;
+        padding: 0;
+        margin: 0;
+      }
+      .skill-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1rem 1.25rem; }
+      .skill-card h3 { margin: 0 0 0.35rem; font-size: 1.05rem; color: var(--accent); }
+      .skill-card p { margin: 0; color: var(--muted); font-size: 0.92rem; }
+
+      /* project cards */
+      .project-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem 1.4rem; margin-bottom: 1.25rem; }
+      .project-card h3 { margin: 0 0 0.4rem; font-size: 1.15rem; }
+      .project-card .status {
+        display: inline-block;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        padding: 0.15rem 0.6rem;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        color: var(--muted);
+        margin-left: 0.5rem;
+        vertical-align: middle;
+      }
+      .project-card .status.live { color: #4ade80; border-color: #14532d; background: rgba(74, 222, 128, 0.08); }
+      .project-card .status.wip { color: var(--accent); border-color: #0c4a6e; background: rgba(56, 189, 248, 0.08); }
+      .project-card p { color: var(--muted); margin: 0 0 0.75rem; }
+      .project-card .links a { margin-right: 1rem; font-size: 0.92rem; }
+
+      /* about */
+      .prose { color: var(--muted); max-width: 72ch; }
+      .prose strong { color: var(--text); }
+      .highlights { list-style: none; padding: 0; margin: 1.5rem 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+      .highlights li { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; }
+      .highlights .role { color: var(--text); font-weight: 600; display: block; }
+      .highlights .org { color: var(--muted); font-size: 0.92rem; }
+
+      /* blog stub */
+      .blog-list { list-style: none; padding: 0; margin: 0; }
+      .blog-list li { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1rem 1.25rem; margin-bottom: 1rem; }
+      .blog-list h3 { margin: 0 0 0.3rem; font-size: 1.05rem; }
+      .blog-list p { margin: 0; color: var(--muted); font-size: 0.92rem; }
+
+      /* contact */
+      .contact-list { list-style: none; padding: 0; margin: 1.5rem 0; }
+      .contact-list li { margin-bottom: 0.75rem; }
+      .contact-list .label { color: var(--muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; display: block; }
+
+      /* footer */
+      .site-footer { border-top: 1px solid var(--border); padding: 1.5rem 1.25rem 2.5rem; text-align: center; color: var(--muted); font-size: 0.85rem; }
+      .site-footer a { color: var(--muted); }
+      .site-footer a:hover { color: var(--accent); }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="Main">
+        <a class="brand" href="/">Ilhaam Ghiffari</a>
+        <ul>
+          {
+            nav.map((item) => (
+              <li>
+                <a href={item.href} aria-current={Astro.url.pathname === item.href ? 'page' : undefined}>
+                  {item.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <p>
+        © 2026 Ilhaam Ghiffari · Built with Astro · Deployed via a golden path ·{' '}
+        <a href="https://github.com/IlhaamGhiffari">GitHub</a>
+      </p>
+    </footer>
+  </body>
+</html>

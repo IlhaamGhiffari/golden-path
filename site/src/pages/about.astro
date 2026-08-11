@@ -1,0 +1,49 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const highlights = [
+  { role: 'Top 20, Datathon AI Impact Challenge 2026', org: 'Microsoft Elevate × Dicoding — “Aceh Resilience Monitor”' },
+  { role: 'Bangkit Academy 2024 — Machine Learning', org: 'Google, Microsoft & GoTo-backed program' },
+  { role: 'Vice Chair, DPM FMIPA USK', org: 'Student legislative council, 2024' },
+  { role: 'Vice Head, HUAL HMIF USK', org: 'Student executive board, 2023' },
+  { role: 'Staff, HUAL BEM FMIPA', org: 'Student executive board, 2022' },
+];
+---
+<BaseLayout title="About — Ilhaam Ghiffari" description="About Ilhaam Ghiffari — informatics graduate focused on platform engineering.">
+  <section>
+    <h1>About</h1>
+    <div class="prose">
+      <p>
+        Hi, I'm <strong>Ilhaam</strong> — an informatics graduate turned platform engineering
+        enthusiast. I care about the delivery pipeline as a product: infrastructure as code,
+        containers, Kubernetes, GitOps, CI/CD, security, and observability.
+      </p>
+      <p>
+        I hold a <strong>S.Kom</strong> (B.Sc. in Informatics) from <strong>Universitas Syiah
+        Kuala</strong>, graduated April 2026 with a <strong>GPA of 3.77/4.00</strong>. I am
+        currently building this site — the <em>golden-path</em> project — where the delivery
+        pipeline itself is the portfolio: an Astro site deployed to Azure through a fully
+        automated golden path.
+      </p>
+      <p>
+        Outside platform engineering, I do commercial water-resources data engineering —
+        rainfall-runoff modeling (F.J. Mock) and evapotranspiration (ETo, FAO-56) for
+        reliability-discharge analysis in Aceh, Indonesia.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Selected highlights</h2>
+    <ul class="highlights">
+      {
+        highlights.map((h) => (
+          <li>
+            <span class="role">{h.role}</span>
+            <span class="org">{h.org}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</BaseLayout>
