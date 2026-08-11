@@ -1,0 +1,12 @@
+# prometheus-blackbox-exporter values — reproducible install:
+#   helm install prometheus-blackbox-exporter prometheus-community/prometheus-blackbox-exporter \
+#     -n monitoring -f monitoring/blackbox.yaml
+config:
+  modules:
+    http_2xx:
+      prober: http
+      timeout: 5s
+      http:
+        valid_status_codes: [200]
+        follow_redirects: true
+        preferred_ip_protocol: ip4

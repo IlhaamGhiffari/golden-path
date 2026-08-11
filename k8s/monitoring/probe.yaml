@@ -1,0 +1,20 @@
+# Uptime probe for the live site — scraped by Prometheus from the
+# blackbox-exporter (HTTP GET, http_2xx module, every 60s).
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: golden-path-uptime
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  jobName: golden-path-uptime
+  prober:
+    url: prometheus-blackbox-exporter.monitoring:9115
+  module: http_2xx
+  interval: 60s
+  targets:
+    staticConfig:
+      targets:
+        - https://ilhaamghiffari.tech
+        - https://www.ilhaamghiffari.tech
