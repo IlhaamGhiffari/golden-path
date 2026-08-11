@@ -1,0 +1,58 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+<BaseLayout title="Why GitOps — Ilhaam Ghiffari" description="Declarative state, self-healing clusters, and the audit trail GitOps buys you.">
+  <article class="prose">
+    <h1>Why GitOps</h1>
+    <p class="sub">Aug 2026 · ArgoCD on this very cluster</p>
+
+    <p>
+      The classic deploy is imperative: you <em>tell</em> the cluster what to do
+      (<code>kubectl apply</code>, <code>helm upgrade</code>, <code>az aks ...</code>). GitOps flips
+      it: the cluster <em>watches</em> git and converges itself. Your desired state lives in a
+      repository; an operator makes reality match it.
+    </p>
+
+    <h2>What it actually buys you</h2>
+    <ul>
+      <li>
+        <strong>One source of truth.</strong> The manifests in <code>k8s/</code> are the spec.
+        Nobody can drift the cluster by hand — if they try, ArgoCD's self-heal reverts it.
+      </li>
+      <li>
+        <strong>An audit trail by default.</strong> Every change to the cluster is a commit:
+        who, what, when, and why (the commit message). This site's deploys are literally
+        <code>chore: bump image to &lt;sha&gt; [skip ci]</code> commits made by the pipeline.
+      </li>
+      <li>
+        <strong>Rollback is a revert.</strong> The app misbehaves after a release? Revert the
+        commit. The cluster converges back to the previous state — no restore-from-backup dance.
+      </li>
+      <li>
+        <strong>Review before change.</strong> Since everything is a PR-able file, cluster changes
+        get the same review process as application code.
+      </li>
+    </ul>
+
+    <h2>How it looks here</h2>
+    <p>
+      ArgoCD runs an Application whose source is this repo's <code>k8s/</code> directory
+      (<code>directory.recurse: true</code> — learned that the hard way), with automated sync,
+      prune, and self-heal. CI commits the new image tag; ArgoCD detects the drift and rolls it
+      out. The ingress, network policies, cert-manager issuer, and the ServiceMonitor that feeds
+      Prometheus are all the same kind of file — security and observability as code, deployed by
+      the same loop as the app.
+    </p>
+
+    <h2>When GitOps is not the answer</h2>
+    <p>
+      Honest caveat: GitOps is a poor fit for stateful hot paths (databases), for truly
+      time-critical rollouts, and it adds machinery that's overkill for a single static site. The
+      real payoff shows when a team shares a platform and needs review, auditability, and
+      convergence — which is exactly the internal-developer-platform story this repo is practicing
+      at portfolio scale.
+    </p>
+
+    <p><a href="/blog">← all posts</a></p>
+  </article>
+</BaseLayout>

@@ -1,0 +1,52 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+<BaseLayout title="Deploying my portfolio like a platform product — Ilhaam Ghiffari" description="How this site ships itself: a full golden path from git push to live TLS.">
+  <article class="prose">
+    <h1>Deploying my portfolio like a platform product</h1>
+    <p class="sub">Aug 2026 · the pipeline this site runs on</p>
+
+    <p>
+      Most portfolios show <strong>what</strong> someone built. This one shows
+      <strong> how it runs</strong>. The site you're reading is the output of the platform built
+      to host it — and the only human action in the whole loop is <code>git push</code>.
+    </p>
+
+    <h2>The loop</h2>
+    <ol>
+      <li><strong>Push</strong> to <code>main</code> triggers GitHub Actions (path-filtered to <code>site/**</code>).</li>
+      <li>CI runs <code>npm ci</code>, <code>astro check</code>, <code>npm run build</code>.</li>
+      <li>The container image is built and scanned with <strong>Trivy</strong> — HIGH/CRITICAL findings fail the job, so a dirty image can never reach the registry.</li>
+      <li>The image is pushed to GHCR, and <code>scripts/bump-image.sh</code> commits the new tag into the Kubernetes manifests with <code>[skip ci]</code>.</li>
+      <li><strong>ArgoCD</strong> sees the drift and syncs the AKS cluster. A rolling update swaps the pods.</li>
+      <li>Traffic flows through nginx-ingress with a <strong>Let's Encrypt certificate</strong> managed by cert-manager — TLS included in the deploy, not bolted on after.</li>
+    </ol>
+
+    <h2>Numbers that make it real</h2>
+    <ul>
+      <li>Trivy: <strong>0 vulnerabilities</strong> (base image CVE-patched at build time via <code>apk upgrade</code>).</li>
+      <li>Every third-party action in CI is version-pinned; the Trivy action is pinned to a <strong>commit SHA</strong> because its tags were supply-chain compromised in March 2026.</li>
+      <li>The deployment is <strong>Pod Security Admission restricted</strong>-compliant and runs under a default-deny NetworkPolicy.</li>
+      <li>Uptime is probed from inside the cluster every 60s (Blackbox exporter) into Grafana.</li>
+    </ul>
+
+    <h2>What I learned</h2>
+    <p>
+      The pipeline wasn't the hard part — the <em>exceptions</em> were. Azure for Students restricts
+      deployable regions. kubenet's default service CIDR collides with your VNet. The Azure load
+      balancer health-probes ingress-nginx with a bare <code>GET /</code>, which 404s and silently
+      kills your public URL. ArgoCD ignores subdirectories unless you set
+      <code>directory.recurse</code>. Each of these cost me real debugging time, and each is
+      documented in <a href="https://github.com/IlhaamGhiffari/golden-path/blob/main/docs/architecture.md">docs/architecture.md</a> —
+      twelve war stories so far.
+    </p>
+
+    <p>
+      The whole thing is disposable: <code>terraform destroy</code> removes the cluster, and a
+      ~25-minute rebuild brings it back from the repo. Infrastructure as code makes platforms
+      <em>ephemeral on purpose</em> — that's the point.
+    </p>
+
+    <p><a href="/blog">← all posts</a></p>
+  </article>
+</BaseLayout>
