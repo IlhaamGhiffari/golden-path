@@ -34,6 +34,8 @@ resource "azurerm_kubernetes_cluster" "main" {
     # kubelet hung under load → NodeNotReady → site down (war story #13).
     vm_size        = "Standard_B2ms"
     vnet_subnet_id = azurerm_subnet.aks.id
+    # required by azurerm v4 when rotating the system pool's vm_size
+    temporary_name_for_rotation = "sysrot"
   }
 
   identity {
