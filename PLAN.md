@@ -140,7 +140,7 @@ npm create astro@latest site -- --template minimal --typescript strict --git fal
 cd site && npm install
 ```
 
-Set `output: 'static'` (default) in `site/astro.config.mjs`. Add content: `src/pages/index.astro` (hero: name, one-liner, the 7 showcased skills), `about.astro`, `projects.astro` (cards linking to the future demo + GitHub), `blog.astro` stub, `contact.astro`.
+Set `output: 'static'` (default) in `site/astro.config.mjs`. Content language: **EN** (hiring-manager audience); hero text-only, **no photo**. Add content: `src/pages/index.astro` (hero: name, one-liner, the 7 showcased skills), `about.astro`, `projects.astro` (cards linking to the future demo + GitHub), `blog.astro` stub, `contact.astro`.
 
 **Verify:** `npm run dev` → site at http://localhost:4321; `npm run build` exits 0 and produces `site/dist/`.
 
@@ -338,7 +338,7 @@ Sections: architecture diagram (ASCII), the 7-domain mapping table, quickstart (
 
 ### Task 4.2 — Site content
 
-- Projects section: this repo + 1–2 past projects (even the mini self-service portal idea as "next").
+- Projects section (EN): this repo as flagship + Aceh Resilience Monitor (Top 20 Datathon AI Impact Challenge 2026) + hydrology debit andalan project (commercial).
 - Blog stub → 2 short posts: "Deploying my portfolio like a platform product" and "Why GitOps" (screenshots from ArgoCD UI).
 - Link the live URL prominently.
 
@@ -403,7 +403,7 @@ Sections: architecture diagram (ASCII), the 7-domain mapping table, quickstart (
 | Credit expiry mid-build | Calendar reminder 3 days before; teardown script ready |
 | AKS deploy latency (10–15 min) | Terraform plan/apply in CI with `-auto-approve` on main only |
 | Image pull auth on AKS | Make GHCR package public (fine for portfolio) |
-| TLS/HTTPS without a domain | **Open question:** buy cheap domain (~$10/yr, out-of-pocket) for real certs, or demo over HTTP via sslip.io, or Cloudflare Tunnel (free HTTPS URL) |
+| TLS/HTTPS without a domain | **Resolved (user):** free only — Cloudflare Tunnel (free HTTPS URL) primary, sslip.io HTTP fallback; no domain purchase |
 | ArgoCD vs Flux | ArgoCD chosen (most-recognized); AKS GitOps extension (Flux) noted as alternative in README |
 | Content: what projects to feature | 1–2 past projects + this pipeline as the flagship; blog posts double as writing samples |
 | AGENTS.md mentions Svelte tooling available | Not used — Astro chosen deliberately (static-first, islands); revisit only if user prefers SvelteKit |
