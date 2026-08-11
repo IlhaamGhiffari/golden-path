@@ -9,3 +9,9 @@ variable "resource_group_name" {
   type        = string
   default     = "golden-path-rg"
 }
+
+variable "kubernetes_version" {
+  description = "AKS Kubernetes version (pin for reproducibility)"
+  type        = string
+  default     = "1.36.2"
+}
