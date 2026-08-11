@@ -12,6 +12,6 @@ spec:
     matchLabels:
       app: golden-path
   endpoints:
-    - port: http
-      path: /stub_status
+    - port: metrics
+      path: /metrics
       interval: 30s

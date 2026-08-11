@@ -69,7 +69,8 @@ spec:
         - port: 8089
           protocol: TCP
 ---
-# Prometheus (monitoring ns) scrapes nginx /stub_status on the app port :80
+# Prometheus (monitoring ns) scrapes the metrics-exporter sidecar (:9113);
+# :80 kept for any future direct-scrape targets
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -85,5 +86,7 @@ spec:
               kubernetes.io/metadata.name: monitoring
       ports:
         - port: 80
+          protocol: TCP
+        - port: 9113
           protocol: TCP
 

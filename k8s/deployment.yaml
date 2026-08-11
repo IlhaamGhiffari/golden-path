@@ -60,6 +60,35 @@ spec:
               port: http
             initialDelaySeconds: 5
             periodSeconds: 15
+        # converts nginx stub_status (plain text) → Prometheus metrics on :9113
+        - name: metrics-exporter
+          image: nginx/nginx-prometheus-exporter:1.4.0
+          args:
+            - -nginx.scrape-uri=http://127.0.0.1:80/stub_status
+          ports:
+            - name: metrics
+              containerPort: 9113
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65534
+            runAsGroup: 65534
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
+            initialDelaySeconds: 5
+            periodSeconds: 10
       volumes:
         - name: nginx-cache
           emptyDir: {}
