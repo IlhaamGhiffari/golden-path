@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: golden-path
+  namespace: portfolio
+  annotations:
+    # HTTP-only until the Cloudflare Tunnel is wired up (free HTTPS, no domain)
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: REPLACE-WITH-LB-IP.sslip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: golden-path
+                port:
+                  name: http

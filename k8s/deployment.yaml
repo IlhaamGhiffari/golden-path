@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: golden-path
+  namespace: portfolio
+  labels:
+    app: golden-path
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: golden-path
+  template:
+    metadata:
+      labels:
+        app: golden-path
+    spec:
+      # compliant with Pod Security Admission "restricted" (enforced in Phase 3)
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: golden-path
+          image: ghcr.io/ilhaamghiffari/golden-path:714b5cba498149b3a9a4114a9f5c16ac800fc8c4
+          ports:
+            - name: http
+              containerPort: 80
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          volumeMounts:
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+            - name: nginx-run
+              mountPath: /var/run
+            - name: nginx-logs
+              mountPath: /var/log/nginx
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 15
+      volumes:
+        - name: nginx-cache
+          emptyDir: {}
+        - name: nginx-run
+          emptyDir: {}
+        - name: nginx-logs
+          emptyDir: {}
