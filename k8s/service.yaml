@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: golden-path
   namespace: portfolio
+  labels:
+    app: golden-path # ServiceMonitor selects the Service by label
 spec:
   selector:
     app: golden-path
