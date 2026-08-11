@@ -4,12 +4,27 @@ metadata:
   name: golden-path
   namespace: portfolio
   annotations:
-    # HTTP-only until the Cloudflare Tunnel is wired up (free HTTPS, no domain)
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    # automatic TLS via cert-manager (ClusterIssuer: letsencrypt-prod)
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   ingressClassName: nginx
+  tls:
+    - hosts:
+        - ilhaamghiffari.tech
+        - www.ilhaamghiffari.tech
+      secretName: golden-path-tls
   rules:
-    - host: 40.119.232.45.sslip.io
+    - host: ilhaamghiffari.tech
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: golden-path
+                port:
+                  name: http
+    - host: www.ilhaamghiffari.tech
       http:
         paths:
           - path: /
