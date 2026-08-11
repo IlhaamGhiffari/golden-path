@@ -18,7 +18,7 @@ Every commit travels the golden path: CI builds it, scanners vet it, containers 
 ![Grafana](https://img.shields.io/badge/Grafana-F46800?logo=grafana&logoColor=white&style=for-the-badge)
 ![Trivy](https://img.shields.io/badge/Trivy-1904DA?logo=trivy&logoColor=white&style=for-the-badge)
 
-**Status:** 🟢 Phases 1–2 complete — the site is **live** at [https://ilhaamghiffari.tech](https://ilhaamghiffari.tech) (TLS via cert-manager/Let's Encrypt), deployed purely by GitOps.
+**Status:** 🟢 Phases 1–3 complete — the site is **live** at [https://ilhaamghiffari.tech](https://ilhaamghiffari.tech) (TLS via cert-manager/Let's Encrypt), deployed purely by GitOps, monitored by Prometheus/Grafana + Blackbox.
 
 </div>
 
@@ -169,7 +169,7 @@ cd infra && terraform destroy -auto-approve
 - **Hardened edge** — CSP, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `server_tokens off`
 - **State hygiene** — Terraform state only in Azure Storage (never committed)
 
-**Next (Phase 3):** OIDC federation for Azure in CI, IaC scanning (tfsec/Checkov). Already done ahead of schedule: TLS + HSTS (cert-manager), PSA `restricted` enforcement, default-deny NetworkPolicy.
+**Security state:** OIDC federation for Azure in CI (zero static secrets), IaC scanning in CI, TLS + HSTS, PSA `restricted` enforcement, default-deny NetworkPolicy — all live and verified. Phase 4 remains: evidence pack (screenshots, demo video), repo public, site polish.
 
 ---
 
@@ -197,9 +197,8 @@ Running a Kubernetes cluster on Azure *responsibly*:
 - [x] AKS provisioning + GitOps deploy (ArgoCD)
 - [x] Public URL via ingress + TLS (cert-manager/Let's Encrypt, HSTS)
 - [x] Documentation (this README + `docs/`)
-- [ ] Observability stack (Prometheus/Grafana) + uptime probes
-- [ ] Security hardening pass (OIDC for Azure in CI, IaC scanning)
-- [ ] TLS via Cloudflare Tunnel
+- [x] Observability stack (Prometheus/Grafana) + uptime probes
+- [x] Security hardening pass (OIDC for Azure in CI, IaC scanning)
 - [ ] Public release + demo video
 ---
 

@@ -135,6 +135,21 @@ is human text, not the Prometheus exposition format. Standard fix: the `nginx-pr
 `allow` list must include `127.0.0.0/8` — and the sidecar itself had to pass PSA `restricted`
 (non-root `65534`, no caps, read-only root FS).
 
+### 11. GitHub's OIDC subject claim carries numeric entity IDs
+
+`AADSTS700213: No matching federated identity record ... subject 'repo:IlhaamGhiffari@126216608/golden-path@1326966960:...'` —
+the presented `sub` claim includes GitHub's internal numeric IDs, not the clean
+`repo:owner/repo:ref:...` form most docs show. The federated credential subject must match the
+real claim exactly (the IDs are stable public entity IDs). Bonus: `azure/login@v2` rejects
+`auth-type: OIDC` — v2 infers OIDC automatically from `client-id` without a `client-secret`.
+
+### 12. Probe CRD: prometheus-operator v0.93 renamed the targets field
+
+`spec.targets.staticConfig.targets` no longer exists — applying it is silently pruned
+(`staticConfig: {}`). The v0.93 schema moved hosts to `spec.targets.staticConfig.static`
+(a plain list of strings). Check the CRD schema (`kubectl get crd probes... -o jsonpath`) before
+writing Probe manifests.
+
 ## Cost notes
 
 - Phase 1 (site + CI + state bootstrap): ~$1 total

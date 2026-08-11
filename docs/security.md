@@ -23,15 +23,17 @@ and the **reasoning** behind each choice.
 | Secrets hygiene | repo-wide | Terraform state lives only in Azure Storage; no `.env`/credentials committed; ArgoCD auth = **scoped read-only SSH deploy key** (revocable, repo-level, not an account PAT) |
 | Pull-path auth | GHCR | package is public → AKS pulls anonymously; **no imagePullSecret / static registry credential** in the cluster |
 | Healthcheck | `site/Dockerfile` | `HEALTHCHECK` via wget — orchestrators get a liveness signal from the container itself |
+| **OIDC federation for Azure in CI** | `.github/workflows/ci.yml` (`tf-plan` job) | `azure/login@v2` with a federated-credential SP — **no client secret exists anywhere**; SP scoped to `Contributor` (main RG) + `Storage Account Key Operator` (state RG); state key fetched at runtime, never stored; `terraform plan` runs against real remote state on every push/PR |
+| **IaC scanning in CI** | `.github/workflows/ci.yml` (`scan-iac` job) | Trivy fs misconfig on the whole repo (HIGH/CRITICAL gates) — tfsec's successor, same SHA-pinned action |
+| **Uptime probes** | `k8s/monitoring/probe.yaml` + `monitoring/blackbox.yaml` | blackbox-exporter probes `https://ilhaamghiffari.tech` + `www` every 60s (Probe CR, GitOps-managed) |
+| **Dashboards as code** | `monitoring/grafana-dashboards/` | kube-prometheus-stack's provisioned dashboards + imported Blackbox (7587) exported as JSON |
 
-## Planned (Phase 3)
+## Planned / optional
 
 | Control | Why it matters |
 |---|---|
-| **OIDC federation for Azure in CI** | Replace long-lived service principal secrets with short-lived federated tokens — the flagship "no static secrets" story. (Today CI only authenticates to GHCR via `GITHUB_TOKEN`, which is itself short-lived — but Azure auth is still on the interactive CLI path.) |
-| **IaC scanning** | tfsec/Checkov job on `infra/` in CI (Trivy misconfig runs locally today) |
-| **HSTS** | Deferred to when TLS lands (Cloudflare Tunnel) — a no-op header over plain HTTP is theater |
-| **Azure Policy for AKS** | Already enabled in Terraform (`azure_policy_enabled = true`) |
+| **Azure Policy for AKS** | Already enabled in Terraform (`azure_policy_enabled = true`) — waiting for an actual policy assignment to demo |
+| **Grafana Cloud free tier (3.4, optional)** | Managed-vs-self-hosted talking point; survives `terraform destroy` |
 
 ## Accepted risks (scanned, understood, deliberately not fixed)
 
