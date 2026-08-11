@@ -1,0 +1,16 @@
+# kube-prometheus-stack overrides — apply with:
+#   helm upgrade kube-prometheus-stack prometheus-community/kube-prometheus-stack \
+#     -n monitoring -f monitoring/kube-prometheus-stack-values.yaml
+#
+# Rationale: 1× B2s node (4GB RAM) — cap Prometheus so the kubelet never OOMs
+# or hangs under load (war story #13: NodeNotReady during full-stack operation).
+prometheus:
+  prometheusSpec:
+    retention: 3d
+    resources:
+      requests:
+        memory: 512Mi
+        cpu: 250m
+      limits:
+        memory: 1Gi
+        cpu: 1

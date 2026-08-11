@@ -28,9 +28,11 @@ resource "azurerm_kubernetes_cluster" "main" {
   kubernetes_version  = var.kubernetes_version
 
   default_node_pool {
-    name           = "system"
-    node_count     = 1
-    vm_size        = "Standard_B2s"
+    name       = "system"
+    node_count = 1
+    # B2ms (8GB) — B2s (4GB) could not hold the full observability stack:
+    # kubelet hung under load → NodeNotReady → site down (war story #13).
+    vm_size        = "Standard_B2ms"
     vnet_subnet_id = azurerm_subnet.aks.id
   }
 

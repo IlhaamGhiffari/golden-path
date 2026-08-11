@@ -150,6 +150,23 @@ real claim exactly (the IDs are stable public entity IDs). Bonus: `azure/login@v
 (a plain list of strings). Check the CRD schema (`kubectl get crd probes... -o jsonpath`) before
 writing Probe manifests.
 
+### 13. 1× B2s resource ceiling — the kubelet hangs and takes the site down
+
+**Symptom:** `NodeNotReady` / "Kubelet stopped posting node status" under normal operation;
+port-forwards die with "lost connection to pod"; kube-apiserver → kubelet proxy returns 502;
+pods stuck in `ContainerCreating`; the public URL 503s or times out (LB health probes fail
+against a NotReady node).
+
+**Root cause:** the whole platform ran on one `Standard_B2s` (2 vCPU / 4GB): AKS system
+components + ingress-nginx + cert-manager + ArgoCD + kube-prometheus-stack (Prometheus TSDB is
+the hungriest) + blackbox + the app at 2 replicas. The kubelet starved on CPU, missed its
+heartbeat deadline, and the node flapped NotReady — taking the site with it.
+
+**Fix:** node `Standard_B2s` → `Standard_B2ms` (8GB) + defense-in-depth on Prometheus
+(`monitoring/kube-prometheus-stack-values.yaml`: retention 10d→3d, resources capped
+512Mi/1Gi). Lesson: size for the *full* stack *before* adding observability — capacity is a
+feature, and 4GB was never going to hold this.
+
 ## Cost notes
 
 - Phase 1 (site + CI + state bootstrap): ~$1 total
