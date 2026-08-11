@@ -50,6 +50,16 @@ resource "azurerm_kubernetes_cluster" "main" {
   azure_policy_enabled              = true # Azure Policy for AKS
   role_based_access_control_enabled = true
 
+  # --- security hardening ---
+  api_server_access_profile {
+    # API server reachable only from our public IP (residential — if it changes,
+    # update via terraform apply; ARM management plane is NOT affected).
+    authorized_ip_ranges = ["182.10.225.250/32"]
+  }
+  # AAD-only auth: disables the unauthenticated local "clusterAdmin" kubeconfig.
+  # `az aks get-credentials` (AAD token) keeps working.
+  local_account_disabled = true
+
   tags = {
     project = "golden-path"
   }
@@ -63,6 +73,14 @@ resource "azurerm_key_vault" "main" {
   tenant_id                  = data.azurerm_client_config.current.tenant_id
   sku_name                   = "standard"
   soft_delete_retention_days = 7
+  purge_protection_enabled   = true
+
+  # deny-by-default: no public data-plane access; only Azure services may bypass.
+  # (management plane via ARM is unaffected — terraform apply still works)
+  network_acls {
+    default_action = "Deny"
+    bypass         = "AzureServices"
+  }
 }
 
 data "azurerm_client_config" "current" {}
