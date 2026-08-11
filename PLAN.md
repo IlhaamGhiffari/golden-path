@@ -245,7 +245,8 @@ Commit: `feat: add kubernetes manifests`.
 
 ### Task 2.3 — Ingress + public access
 
-- Install nginx ingress controller: `helm install ingress-nginx ingress-nginx/ingress-nginx -n ingress-nginx --create-namespace` (or via Terraform `helm_release` — preferred, keeps everything IaC; requires `helm` provider in `infra/`).
+- Install nginx ingress controller: `helm install ingress-nginx ingress-nginx/ingress-nginx -n ingress-nginx --create-namespace -f k8s/ingress-nginx-values.yaml` (or via Terraform `helm_release` — preferred, keeps everything IaC; requires `helm` provider in `infra/`).
+  - **AKS gotcha (fixed in `k8s/ingress-nginx-values.yaml`):** the default Azure LB health probe is HTTP GET `/` without a Host header; ingress-nginx answers 404 → node unhealthy → public URL times out. Set `service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: /healthz`.
 - `k8s/ingress.yaml` → host `<your-ip>.sslip.io` (or custom domain if bought; see Open Questions). Wait for LB: `kubectl -n ingress-nginx get svc ingress-nginx-controller -w` (get EXTERNAL-IP).
 - Apply ingress, curl the public URL from outside.
 

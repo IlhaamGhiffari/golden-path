@@ -1,0 +1,11 @@
+# ingress-nginx values — reproducible install:
+#   helm install ingress-nginx ingress-nginx/ingress-nginx -n ingress-nginx \
+#     --create-namespace -f k8s/ingress-nginx-values.yaml
+controller:
+  service:
+    annotations:
+      # AKS / Standard LB gotcha: the default health probe is HTTP GET "/" with no
+      # Host header — ingress-nginx answers 404 for unknown hosts → node marked
+      # unhealthy → LB drops ALL traffic (public URL times out from everywhere).
+      # /healthz always returns 200, so point the probe there.
+      service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: /healthz
