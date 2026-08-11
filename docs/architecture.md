@@ -110,6 +110,31 @@ mutation endpoints 404 for them. (The `SubscriptionNotFound`-style red herring o
 apart violates the kubectl skew policy. Fixed by `brew install kubernetes-cli` (1.36.3) and preferring
 `/opt/homebrew/bin` in PATH.
 
+### 8. ArgoCD silently skips subdirectories (directory.recurse defaults to false)
+
+Manifests in `k8s/cert-manager/` (ClusterIssuer) and `k8s/monitoring/` (ServiceMonitor) never
+reached the cluster — the Application synced "Healthy" while resources were missing. Root cause:
+`spec.source.directory.recurse` defaults to **false**; only files directly in `k8s/` were applied.
+Fix: `directory: { recurse: true }` in the Application — and because ArgoCD skips applying its own
+Application resource (recursion guard), the live spec had to be updated with `kubectl apply`.
+
+### 9. kube-prometheus-stack: two selectors that silently drop your target
+
+1. The Prometheus CR ships with `serviceMonitorSelector: { release: kube-prometheus-stack }` —
+   a ServiceMonitor without that label is **never scraped** (no error anywhere).
+2. ServiceMonitors select **Services by their own labels** (`metadata.labels`), not the pod
+   selector — our Service had no labels at all.
+
+Both fixed in `k8s/monitoring/servicemonitor.yaml` + `k8s/service.yaml`.
+
+### 10. nginx stub_status is plain text — Prometheus needs an exporter sidecar
+
+Scraping `/stub_status` directly gives `strconv.ParseFloat: parsing "connections:"` — stub_status
+is human text, not the Prometheus exposition format. Standard fix: the `nginx-prometheus-exporter`
+**sidecar** converts it (`:9113/metrics`). The exporter scrapes the app via loopback, so the nginx
+`allow` list must include `127.0.0.0/8` — and the sidecar itself had to pass PSA `restricted`
+(non-root `65534`, no caps, read-only root FS).
+
 ## Cost notes
 
 - Phase 1 (site + CI + state bootstrap): ~$1 total
