@@ -185,7 +185,13 @@ Running a Kubernetes cluster on Azure *responsibly*:
 | Registry (GHCR) / CI / monitoring | $0 | $0 |
 | **Monthly total** | **~$55–60** ⚠️ | **~$15–25** |
 
-**The point:** IaC makes platforms *disposable*. The final real bill gets published here as proof.
+**The point:** IaC makes platforms *disposable*. Here's the real bill — proof, not promises:
+
+| Proof | What it shows |
+|---|---|
+| ![Billing summary](docs/evidence/billing-summary.png) | **$99.22 of $100 credit remaining** — total spend so far: **$0.78** |
+| ![Cost analysis](docs/evidence/billing-cost-analysis.png) | Aug 2026 breakdown: Virtual Network $0.51 · VMs $0.17 · Storage $0.10 — all in one region, one subscription |
+| ![Credits](docs/evidence/billing-credits.png) | Azure for Students credit: $100, active until **Sep 13 2026** |
 
 ---
 

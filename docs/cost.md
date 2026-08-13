@@ -30,10 +30,13 @@ A work session that keeps the cluster up ~6-8h and then runs `terraform destroy`
 
 ## Budget envelope
 
-- Azure for Students credit: **$100** (expires mid-Sep 2026)
+- Azure for Students credit: **$100** (expires **Sep 13 2026**)
 - Planned spend: **$20-35 total** across the project with destroy discipline
 - **Rule:** `terraform destroy` at the end of every session; `az aks stop` for same-day pauses
-- Billing screenshot gets published here as final proof (Phase 4.3)
+- **Actual so far (Aug 14):** **$0.78 spent** — see proof in `docs/evidence/`:
+  - [billing-summary.png](evidence/billing-summary.png) — $99.22 remaining
+  - [billing-cost-analysis.png](evidence/billing-cost-analysis.png) — per-service breakdown (Virtual Network $0.51, VMs $0.17, Storage $0.10)
+  - [billing-credits.png](evidence/billing-credits.png) — credit active until 2026-09-13
 
 ## Why this is a feature, not a bug
 
