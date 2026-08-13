@@ -26,7 +26,7 @@ A work session that keeps the cluster up ~6-8h and then runs `terraform destroy`
 |---|---|
 | B2s node, one session | ~$0.40-0.60 |
 | B2ms node, one session | ~$0.70-0.95 |
-| Left running 24/7 (the anti-pattern) | ~$60-70/mo |
+| Left running 24/7 (the anti-pattern) | ~$90/mo (node $65 + LB/IP $22 + disk $2) |
 
 ## Budget envelope
 

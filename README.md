@@ -61,7 +61,7 @@ In platform engineering, the deliverable is rarely a feature — it's a **path**
 4. **ArgoCD** (automated sync, prune, self-heal) detects the drift and rolls out the new image
 5. The site is served via nginx-ingress with a cert-manager/Let's Encrypt certificate at **https://ilhaamghiffari.tech** (+ www) — TLS and HSTS included
 
-**Proof this loop works:** every commit in this repo since `276e224` was deployed by ArgoCD — including this README's host site, with zero manual `kubectl apply` for app changes.
+**Proof this loop works:** every `site/**` or `k8s/**` change in this repo was rolled out by ArgoCD — including the host site for this README — with zero manual `kubectl apply` for app changes. (Docs/infra-only commits don't touch the cluster.)
 
 ---
 
@@ -69,13 +69,13 @@ In platform engineering, the deliverable is rarely a feature — it's a **path**
 
 | Domain | Where it lives | Status |
 |---|---|---|
-| ☁️ **Cloud (Azure)** | `infra/` — RG, VNet, AKS (1.36.2), Key Vault, OIDC issuer | ✅ live |
-| 🧱 **IaC** | Terraform + remote state (Azure Storage, locked), `plan` before `apply` | ✅ live |
-| 📦 **Containerization** | Multi-stage Dockerfile, `apk upgrade` for CVE patching, non-root, healthcheck | ✅ live |
-| ☸️ **Kubernetes** | AKS + manifests: deployment (PSA-restricted-compliant), service, ingress, HPA | ✅ live |
-| 🔄 **CI/CD** | GitHub Actions: build → check → scan → push → GitOps bump | ✅ live |
-| 🔐 **Security** | Trivy clean (0 HIGH/CRITICAL), SHA-pinned actions, read-only deploy key, hardened nginx | ✅ live |
-| 📈 **Observability** | kube-prometheus-stack, Blackbox probes, dashboards-as-code | ✅ live |
+| ☁️ **Cloud (Azure)** | `infra/` — RG, VNet, AKS (1.36.2), Key Vault, OIDC issuer | ✅ built & verified |
+| 🧱 **IaC** | Terraform + remote state (Azure Storage, locked), `plan` before `apply` | ✅ built & verified |
+| 📦 **Containerization** | Multi-stage Dockerfile, `apk upgrade` for CVE patching, non-root, healthcheck | ✅ built & verified |
+| ☸️ **Kubernetes** | AKS + manifests: deployment (PSA-restricted-compliant), service, ingress, HPA | ✅ built & verified |
+| 🔄 **CI/CD** | GitHub Actions: build → check → scan → push → GitOps bump | ✅ built & verified |
+| 🔐 **Security** | Trivy clean (0 HIGH/CRITICAL), SHA-pinned actions, read-only deploy key, hardened nginx | ✅ built & verified |
+| 📈 **Observability** | kube-prometheus-stack, Blackbox probes, dashboards-as-code | ✅ built & verified |
 
 ---
 
@@ -135,6 +135,9 @@ git clone git@github.com:IlhaamGhiffari/golden-path.git && cd golden-path
 ./scripts/bootstrap-state.sh
 
 # 3. Provision the platform (RG → VNet → AKS → Key Vault)
+#    (the backend needs the state storage key; fetch it via the CLI)
+export ARM_ACCESS_KEY=$(az storage account keys list -g golden-path-state-rg \
+  -n gpstateilhaam --query '[0].value' -o tsv)
 cd infra && terraform init && terraform apply
 
 # 4. Cluster access + ingress controller (AKS probe fix baked into values)
@@ -169,7 +172,7 @@ cd infra && terraform destroy -auto-approve
 - **Hardened edge** — CSP, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `server_tokens off`
 - **State hygiene** — Terraform state only in Azure Storage (never committed)
 
-**Security state:** OIDC federation for Azure in CI (zero static secrets), IaC scanning in CI, TLS + HSTS, PSA `restricted` enforcement, default-deny NetworkPolicy — all live and verified. Phase 4 remains: evidence pack (screenshots, demo video), repo public, site polish.
+**Security state:** OIDC federation for Azure in CI (zero static secrets), IaC scanning in CI, TLS + HSTS, PSA `restricted` enforcement, default-deny NetworkPolicy — all verified live. Phase 4 complete (evidence pack + public release); the only remaining item is the optional demo video.
 
 ---
 
@@ -179,11 +182,11 @@ Running a Kubernetes cluster on Azure *responsibly*:
 
 | Item | Left running 24/7 | With destroy discipline |
 |---|---|---|
-| AKS (1× B2ms node) | ~$30 / mo | ~$3–5 / wk |
+| AKS (1× B2ms node) | ~$65 / mo | ~$0.09/hr, only while running |
 | Managed disk + storage | ~$2 / mo | only while running |
-| Load balancer + public IP | ~$20 / mo | only while running |
+| Load balancer + public IP | ~$22 / mo | only while running |
 | Registry (GHCR) / CI / monitoring | $0 | $0 |
-| **Monthly total** | **~$55–60** ⚠️ | **~$15–25** |
+| **Monthly total** | **~$90** ⚠️ | **~$3–5 / wk** |
 
 **The point:** IaC makes platforms *disposable*. Here's the real bill — proof, not promises:
 
