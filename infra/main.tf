@@ -56,9 +56,11 @@ resource "azurerm_kubernetes_cluster" "main" {
 
   # --- security hardening ---
   api_server_access_profile {
-    # API server reachable only from our public IP (residential — if it changes,
-    # update via terraform apply; ARM management plane is NOT affected).
-    authorized_ip_ranges = ["182.10.225.250/32"]
+    # API server reachable only from our public IP — residential IPs are dynamic,
+    # so this is a variable, not a constant (war story #14): when your IP changes,
+    # run `az aks update --api-server-authorized-ip-ranges <new-ip>/32` (or
+    # update variables.tf + terraform apply). ARM management plane is NOT affected.
+    authorized_ip_ranges = ["${var.home_ip}/32"]
   }
   # NOTE: local_account_disabled requires managed AAD integration (not enabled
   # yet — see docs/security.md known gaps). The API-server IP restriction above
