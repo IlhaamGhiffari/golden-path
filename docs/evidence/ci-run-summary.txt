@@ -1,1 +1,40 @@
-{"at":"2026-08-11T16:59:46Z","conclusion":"","sha":"044e0f4"}
+# CI Evidence — Run 31754158206 (main@4916acd)
+
+Date: 2026-08-13T23:32Z · Commit: `4916acd` (fix: home_ip as variable)
+Workflow: CI · Trigger: push to main · Concurrency group: ci-refs/heads/main
+
+## Job results
+
+| Job | Result | Notes |
+|---|---|---|
+| build | ✅ success | npm ci → astro check → npm run build → upload dist |
+| scan | ✅ success | Trivy image: **0 vulnerabilities** (alpine 3.21.3, 68 pkgs) |
+| scan-iac | ✅ success | Trivy fs misconfig: **0 HIGH/CRITICAL** (infra terraform: 0) |
+| tf-plan | ✅ success | Terraform plan vs real remote state (OIDC, no static secrets) |
+| push | ✅ success | GHCR push (skipped — no site/** changes) |
+
+## Trivy image report (scan job, verbatim)
+
+```
+┌────────────────────────────────┬────────┬─────────────────┬─────────┐
+│             Target             │  Type  │ Vulnerabilities │ Secrets │
+├────────────────────────────────┼────────┼─────────────────┼─────────┤
+│ golden-path:ci (alpine 3.21.3) │ alpine │        0        │    -    │
+└────────────────────────────────┴────────┴─────────────────┴─────────┘
+Legend:
+- '-': Not scanned
+- '0': Clean (no security findings detected)
+```
+
+- `pkg_num=68` Alpine packages scanned · language-specific files: 0
+- Trivy v0.69.3 (action SHA-pinned `57a97c7e…`)
+- Gate: `--severity HIGH,CRITICAL --exit-code 1` — a dirty image cannot reach GHCR
+
+## Trivy IaC report (scan-iac job, verbatim)
+
+```
+│ site/package-lock.json  │  npm      │    -    │
+│ infra                   │ terraform │    0    │
+```
+
+Full log: `gh run view 31754158206 --log`
