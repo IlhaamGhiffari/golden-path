@@ -221,7 +221,9 @@ Honest retrospective — what I'd change if I rebuilt this today (and why):
 - [x] Documentation (this README + `docs/`)
 - [x] Observability stack (Prometheus/Grafana) + uptime probes
 - [x] Security hardening pass (OIDC for Azure in CI, IaC scanning)
-- [ ] Public release + demo video
+- [x] Public release (repo live at https://github.com/IlhaamGhiffari/golden-path)
+- [ ] Demo video
+
 ---
 
 ## 📄 License

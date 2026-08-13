@@ -352,6 +352,8 @@ Sections: architecture diagram (ASCII), the 7-domain mapping table, quickstart (
 
 `gh repo edit --visibility public`. Update repo description (the golden-path one-liner from planning).
 
+**DONE (2026-08-14):** repo public at `https://github.com/IlhaamGhiffari/golden-path`; secret scanning + push protection + dependabot security updates enabled; description set; README roadmap updated. Remaining: demo video (4.3).
+
 **Phase 4 done when:** README + docs + video + screenshots all in repo; repo public; site content complete.
 
 ---
