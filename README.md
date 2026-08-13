@@ -18,7 +18,7 @@ Every commit travels the golden path: CI builds it, scanners vet it, containers 
 ![Grafana](https://img.shields.io/badge/Grafana-F46800?logo=grafana&logoColor=white&style=for-the-badge)
 ![Trivy](https://img.shields.io/badge/Trivy-1904DA?logo=trivy&logoColor=white&style=for-the-badge)
 
-**Status:** 🟢 Phases 1–3 complete — the site is **live** at [https://ilhaamghiffari.tech](https://ilhaamghiffari.tech) (TLS via cert-manager/Let's Encrypt), deployed purely by GitOps, monitored by Prometheus/Grafana + Blackbox.
+**Status:** 🟢 Phases 1–3 complete — the site is deployed at [https://ilhaamghiffari.tech](https://ilhaamghiffari.tech) (TLS via cert-manager/Let's Encrypt), deployed purely by GitOps, monitored by Prometheus/Grafana + Blackbox. *(The cluster is paused between sessions — `az aks start` resumes it in ~7 min, see Cost Efficiency.)*
 
 </div>
 
@@ -45,7 +45,7 @@ In platform engineering, the deliverable is rarely a feature — it's a **path**
                                                                      │ pull
    bump commit [skip ci]                                       ┌─────▼──────┐
    (image tag → new SHA)                                       │     AKS    │
-┌──────────┐   GitOps sync  ┌────────────────┐    deploy       │ (1× B2s)   │
+┌──────────┐   GitOps sync  ┌────────────────┐    deploy       │ (1× B2ms)   │
 │  ArgoCD  │ ◄───────────── │   git (main)   │ ◄────────────── │  nginx app │
 └──────────┘                └────────────────┘                 └─────┬──────┘
                                                                      │ ingress
@@ -75,7 +75,7 @@ In platform engineering, the deliverable is rarely a feature — it's a **path**
 | ☸️ **Kubernetes** | AKS + manifests: deployment (PSA-restricted-compliant), service, ingress, HPA | ✅ live |
 | 🔄 **CI/CD** | GitHub Actions: build → check → scan → push → GitOps bump | ✅ live |
 | 🔐 **Security** | Trivy clean (0 HIGH/CRITICAL), SHA-pinned actions, read-only deploy key, hardened nginx | ✅ live |
-| 📈 **Observability** | kube-prometheus-stack, Blackbox probes, dashboards-as-code | ⏳ Phase 3 |
+| 📈 **Observability** | kube-prometheus-stack, Blackbox probes, dashboards-as-code | ✅ live |
 
 ---
 
@@ -179,13 +179,29 @@ Running a Kubernetes cluster on Azure *responsibly*:
 
 | Item | Left running 24/7 | With destroy discipline |
 |---|---|---|
-| AKS (1× B2s node) | ~$30 / mo | ~$3–5 / wk |
+| AKS (1× B2ms node) | ~$30 / mo | ~$3–5 / wk |
 | Managed disk + storage | ~$2 / mo | only while running |
 | Load balancer + public IP | ~$20 / mo | only while running |
 | Registry (GHCR) / CI / monitoring | $0 | $0 |
 | **Monthly total** | **~$55–60** ⚠️ | **~$15–25** |
 
 **The point:** IaC makes platforms *disposable*. The final real bill gets published here as proof.
+
+---
+
+## 🔁 What I'd do differently
+
+Honest retrospective — what I'd change if I rebuilt this today (and why):
+
+| # | Decision | Retrospective |
+|---|---|---|
+| 1 | **1-node cluster** | It worked, but there's no redundancy — and war story #13 showed a single small node is a real availability risk. Next time: `Standard_B2ms` × 2 or spot nodes for the app pool, system pool separate. |
+| 2 | **kubenet** | Fine for a demo, but pod-to-pod traffic goes through a NAT hop and it needs a route table. Azure CNI (or Cilium) is the default for production-shaped workloads — I chose kubenet for simplicity, and I'd revisit it. |
+| 3 | **Static home-IP allowlist on the AKS API server** | The right security control, but residential IPs are dynamic — it locked me out of my own cluster (war story #14). It's now a Terraform variable with a documented escape hatch, but a managed VPN/tunnel or Azure Bastion would be the cleaner answer. |
+| 4 | **No log aggregation** | Prometheus/Grafana covers metrics, but logs (nginx access logs, app stderr) only live in the pod filesystem / `kubectl logs`. Loki or Grafana Cloud would close that gap (Grafana Cloud free tier is on the roadmap). |
+| 5 | **GitOps image bump by CI commit** | Works and is a great story, but it means CI needs write access to `main` (branch-protection dance). Alternatives worth evaluating: pull-based image updater (ArgoCD Image Updater) or OCI helm charts. |
+| 6 | **Cost discipline before capacity** | I started on `B2s` (4GB) and the whole observability stack didn't fit — I should have sized for the full workload *before* adding Prometheus. Now documented as war story #13. |
+| 7 | **Domain purchased mid-project** | `sslip.io` worked fine as a placeholder, but buying `ilhaamghiffari.tech` early would have meant one DNS/cert setup instead of two. |
 
 ---
 

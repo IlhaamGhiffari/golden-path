@@ -36,7 +36,7 @@ GitHub Actions: ci.yml
 
 | Component | Detail |
 |---|---|
-| **AKS** | `golden-path-aks`, Kubernetes 1.36.2, 1× `Standard_B2s` system pool, kubenet + **Calico** (Calico = NetworkPolicy support later, without cluster recreation) |
+| **AKS** | `golden-path-aks`, Kubernetes 1.36.2, 1× `Standard_B2ms` system pool (8GB — upgraded from B2s, war story #13), kubenet + **Calico** (Calico = NetworkPolicy support later, without cluster recreation) |
 | **Networking** | VNet `10.0.0.0/16`; AKS subnet `10.0.1.0/24`; service CIDR `10.1.0.0/16`, DNS `10.1.0.10` (see war story #2) |
 | **Ingress** | ingress-nginx via Helm; hosts `ilhaamghiffari.tech` + `www.ilhaamghiffari.tech`; **TLS** via cert-manager (ClusterIssuer `letsencrypt-prod`, HTTP-01) → Let's Encrypt SAN cert in `golden-path-tls` secret |
 | **ArgoCD** | Application source `git@github.com:IlhaamGhiffari/golden-path.git`, path `k8s`, dest `portfolio` ns |
@@ -166,6 +166,36 @@ heartbeat deadline, and the node flapped NotReady — taking the site with it.
 (`monitoring/kube-prometheus-stack-values.yaml`: retention 10d→3d, resources capped
 512Mi/1Gi). Lesson: size for the *full* stack *before* adding observability — capacity is a
 feature, and 4GB was never going to hold this.
+
+### 14. Dynamic home IP drift — the API server locks you out of your own cluster
+
+**Symptom:** after a fresh session (`az aks start`), `kubectl get nodes` hangs and
+times out (`dial tcp <apiserver>:443: i/o timeout`) — even though the cluster
+reports `Running`/`Succeeded`, DNS resolves, and the node pool is healthy.
+
+**Root cause:** the API server is locked down with
+`api_server_access_profile.authorized_ip_ranges = [<home-IP>/32]` (Trivy
+AZU-0041). Residential ISPs hand out **dynamic IPs** — the IP at deploy time
+(`…225.250`) was no longer the IP at resume time (`…225.141`). The AKS control
+plane was correctly refusing every request from the new IP. The lock worked
+exactly as designed; the *address it was locking to* had moved.
+
+**Diagnosis (10 seconds):**
+```bash
+MY_IP=$(curl -s https://api.ipify.org)
+az aks show -g golden-path-rg -n golden-path-aks \
+  --query "apiServerAccessProfile.authorizedIpRanges" -o tsv   # stale IP
+```
+
+**Fix:**
+```bash
+az aks update -g golden-path-rg -n golden-path-aks \
+  --api-server-authorized-ip-ranges <new-ip>/32
+```
+and make the IP a **variable** (`var.home_ip`) in Terraform so the drift is a
+one-line change + `terraform apply`, not an edit inside the AKS block. Lesson:
+any allowlist keyed to a residential IP is a landmine — document the
+`az aks update` escape hatch in the same file that declares the lock.
 
 ## Cost notes
 
