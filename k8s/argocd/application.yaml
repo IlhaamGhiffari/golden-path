@@ -18,3 +18,11 @@ spec:
     automated:
       prune: true
       selfHeal: true
+  # Audit fix: HPA owns .spec.replicas — without this, selfHeal would reset
+  # HPA-scaled replica counts back to the git value on every sync (flapping).
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: golden-path
+      jsonPointers:
+        - /spec/replicas

@@ -1,24 +1,30 @@
 output "resource_group_name" {
-  value = azurerm_resource_group.main.name
+  description = "Main resource group"
+  value       = azurerm_resource_group.main.name
 }
 
 output "resource_group_location" {
-  value = azurerm_resource_group.main.location
+  description = "Azure region of the main resource group"
+  value       = azurerm_resource_group.main.location
 }
 
 output "cluster_name" {
-  value = azurerm_kubernetes_cluster.main.name
+  description = "AKS cluster name"
+  value       = azurerm_kubernetes_cluster.main.name
 }
 
 output "oidc_issuer_url" {
-  value = azurerm_kubernetes_cluster.main.oidc_issuer_url
+  description = "AKS OIDC issuer URL (workload identity federations)"
+  value       = azurerm_kubernetes_cluster.main.oidc_issuer_url
 }
 
 output "key_vault_id" {
-  value = azurerm_key_vault.main.id
+  description = "Key Vault resource ID"
+  value       = azurerm_key_vault.main.id
 }
 
 output "kubeconfig" {
-  value     = azurerm_kubernetes_cluster.main.kube_config_raw
-  sensitive = true
+  description = "Raw kubeconfig for the cluster (admin) — stored in state; treat as a secret"
+  value       = azurerm_kubernetes_cluster.main.kube_config_raw
+  sensitive   = true
 }

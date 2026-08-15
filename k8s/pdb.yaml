@@ -1,0 +1,13 @@
+# Audit fix: without a PDB, a node drain during AKS upgrades can take down
+# all replicas at once. minAvailable: 1 keeps the site serving through
+# voluntary disruptions (HPA may scale out; PDB still guarantees ≥1 pod).
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: golden-path
+  namespace: portfolio
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: golden-path

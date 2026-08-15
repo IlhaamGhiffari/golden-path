@@ -1,7 +1,17 @@
+# Audit fix: previously only AKS carried tags. azurerm has no provider-level
+# default_tags (that's AWS/GCP) — so tag via locals + merge per resource.
+locals {
+  default_tags = {
+    project    = "golden-path"
+    managed_by = "terraform"
+  }
+}
+
 # Main resource group
 resource "azurerm_resource_group" "main" {
   name     = var.resource_group_name
   location = var.location
+  tags     = local.default_tags
 }
 
 # --- Networking ---
@@ -10,6 +20,7 @@ resource "azurerm_virtual_network" "main" {
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
   address_space       = ["10.0.0.0/16"]
+  tags                = local.default_tags
 }
 
 resource "azurerm_subnet" "aks" {
@@ -17,6 +28,7 @@ resource "azurerm_subnet" "aks" {
   resource_group_name  = azurerm_resource_group.main.name
   virtual_network_name = azurerm_virtual_network.main.name
   address_prefixes     = ["10.0.1.0/24"]
+  # note: azurerm_subnet exposes no `tags` argument (VNet carries the tags)
 }
 
 # --- AKS ---
@@ -66,9 +78,7 @@ resource "azurerm_kubernetes_cluster" "main" {
   # yet — see docs/security.md known gaps). The API-server IP restriction above
   # already removes the exposure that local accounts would otherwise create.
 
-  tags = {
-    project = "golden-path"
-  }
+  tags = local.default_tags
 }
 
 # --- Key Vault (Standard, ~free tier) ---
@@ -80,6 +90,7 @@ resource "azurerm_key_vault" "main" {
   sku_name                   = "standard"
   soft_delete_retention_days = 7
   purge_protection_enabled   = true
+  tags                       = local.default_tags
 
   # deny-by-default: no public data-plane access; only Azure services may bypass.
   # (management plane via ARM is unaffected — terraform apply still works)

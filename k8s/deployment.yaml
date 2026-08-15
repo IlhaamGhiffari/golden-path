@@ -15,7 +15,9 @@ spec:
       labels:
         app: golden-path
     spec:
-      # compliant with Pod Security Admission "restricted" (enforced in Phase 3)
+      # compliant with Pod Security Admission "restricted" (enforced via
+      # namespace labels in namespace.yaml — audit fix: was runtime-only before)
+      automountServiceAccountToken: false # no pod calls the K8s API (audit fix)
       securityContext:
         runAsNonRoot: true
         runAsUser: 101
@@ -83,6 +85,12 @@ spec:
             limits:
               cpu: 100m
               memory: 64Mi
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
+            initialDelaySeconds: 10
+            periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /metrics
@@ -91,8 +99,11 @@ spec:
             periodSeconds: 10
       volumes:
         - name: nginx-cache
-          emptyDir: {}
+          emptyDir:
+            sizeLimit: 128Mi # audit fix: unbounded emptyDir could fill node disk
         - name: nginx-run
-          emptyDir: {}
+          emptyDir:
+            sizeLimit: 16Mi
         - name: nginx-logs
-          emptyDir: {}
+          emptyDir:
+            sizeLimit: 64Mi

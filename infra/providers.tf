@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.5"
+  required_version = ">= 1.5, < 2.0" # audit fix: upper bound guards against 2.x breakage
 
   required_providers {
     azurerm = {

@@ -2,3 +2,9 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: portfolio
+  # PSA restricted (audit fix: label previously applied via kubectl at runtime
+  # only — ArgoCD selfHeal was reverting it every sync; now enforced from git).
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/audit: restricted

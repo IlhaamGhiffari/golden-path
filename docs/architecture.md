@@ -192,9 +192,10 @@ az aks show -g golden-path-rg -n golden-path-aks \
 az aks update -g golden-path-rg -n golden-path-aks \
   --api-server-authorized-ip-ranges <new-ip>/32
 ```
-and make the IP a **variable** (`var.home_ip`) in Terraform so the drift is a
-one-line change + `terraform apply`, not an edit inside the AKS block. Lesson:
-any allowlist keyed to a residential IP is a landmine — document the
+and make the IP a **variable** (`var.home_ip`, no default — audit fix, see
+`infra/terraform.tfvars.example`) so the drift is a one-line change in
+`terraform.tfvars` + `terraform apply`, not an edit inside the AKS block.
+Lesson: any allowlist keyed to a residential IP is a landmine — document the
 `az aks update` escape hatch in the same file that declares the lock.
 
 ## Cost notes

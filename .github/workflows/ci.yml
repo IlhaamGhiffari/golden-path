@@ -101,6 +101,11 @@ jobs:
           echo "ARM_ACCESS_KEY=$KEY" >> "$GITHUB_ENV"
       - name: Terraform plan (remote state, OIDC auth)
         working-directory: infra
+        env:
+          # home_ip has no default (audit fix: no residential IP in git). Plan
+          # uses a TEST-NET-3 placeholder unless the HOME_IP secret is set —
+          # plan-only value, never applied to Azure.
+          TF_VAR_home_ip: ${{ secrets.HOME_IP || '203.0.113.1' }}
         run: |
           terraform init -no-color
           terraform plan -no-color
