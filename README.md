@@ -7,6 +7,8 @@
 The site isn't just a portfolio — it's the **output of the platform built to run it**.
 Every commit travels the golden path: CI builds it, scanners vet it, containers ship it, GitOps deploys it, observability watches it.
 
+> **🕐 Current status (Aug 2026):** the platform is **destroyed to save Azure credit** — every resource was provisioned, verified, and then torn down via `terraform destroy` (all evidence below is from real builds). Re-provisioning takes ~15 minutes: `cd infra && terraform apply -auto-approve`. Remote state is preserved in Azure Storage, so CI stays green and nothing needs re-bootstrapping.
+
 ![Astro](https://img.shields.io/badge/Astro-BC52EE?logo=astro&logoColor=white&style=for-the-badge)
 ![Terraform](https://img.shields.io/badge/Terraform-7B42BC?logo=terraform&logoColor=white&style=for-the-badge)
 ![Azure](https://img.shields.io/badge/Azure-0078D4?logo=microsoftazure&logoColor=white&style=for-the-badge)
@@ -36,7 +38,7 @@ In platform engineering, the deliverable is rarely a feature — it's a **path**
 
 ---
 
-## 🏗️ Architecture — live today
+## 🏗️ Architecture — built & verified
 
 ```
 ┌──────────┐   git push    ┌────────────────┐   build + scan   ┌────────────┐
@@ -172,7 +174,7 @@ cd infra && terraform destroy -auto-approve
 - **Hardened edge** — CSP, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `server_tokens off`
 - **State hygiene** — Terraform state only in Azure Storage (never committed)
 
-**Security state:** OIDC federation for Azure in CI (zero static secrets), IaC scanning in CI, TLS + HSTS, PSA `restricted` enforcement, default-deny NetworkPolicy — all verified live. Phase 4 complete (evidence pack + public release); the only remaining item is the optional demo video.
+**Security state:** OIDC federation for Azure in CI (zero static secrets), IaC scanning in CI, TLS + HSTS, PSA `restricted` enforcement, default-deny NetworkPolicy — all verified on the live platform before teardown. Phase 4 complete (evidence pack + public release); the only remaining item is the optional demo video.
 
 ---
 
